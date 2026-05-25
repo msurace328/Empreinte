@@ -44,7 +44,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
             action,
             targetId,
             reason,
-            cryptographicHash: `0x${Math.random().toString(16).slice(2, 10)}...${Math.random().toString(16).slice(2, 6)}`
+            hash: `0x${Math.random().toString(16).slice(2, 10)}...${Math.random().toString(16).slice(2, 6)}`, previousHash: `0x000000`
         };
         setAuditLog(prev => [entry, ...prev]);
     };

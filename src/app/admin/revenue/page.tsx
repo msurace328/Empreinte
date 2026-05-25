@@ -31,12 +31,12 @@ export default function RevenuePage() {
                 {opportunities.map(opp => (
                     <Card key={opp.id} className="glass border-border-muted relative overflow-hidden">
                         <CardHeader className="pb-4">
-                            <Badge variant="outline" className="w-fit font-mono text-[10px]">{opp.type}</Badge>
+                            <Badge variant="outline" className="w-fit font-mono text-[10px]">{opp.action}</Badge>
                             <CardTitle className="text-xl mt-2">{opp.title}</CardTitle>
-                            <CardDescription className="text-xs">{opp.description}</CardDescription>
+                            <CardDescription className="text-xs">{opp.gap}</CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-mono text-signal-cyan font-bold tracking-tighter mb-6">+${opp.potentialValue.toLocaleString()}</div>
+                            <div className="text-2xl font-mono text-signal-cyan font-bold tracking-tighter mb-6">+${opp.projectedUpside.toLocaleString()}</div>
                             {opp.status === 'Open' ? (
                                 <div className="flex gap-2">
                                     <Button size="sm" variant="outline" className="flex-1 text-muted-foreground" onClick={() => handleDismiss(opp.id)}>DISMISS</Button>
