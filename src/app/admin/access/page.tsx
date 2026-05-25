@@ -10,6 +10,7 @@ import { ShieldAlert, Users, Lock, Clock, MapPin, Search, AlertCircle, ChevronRi
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { useAuth } from '@/hooks/use-auth';
@@ -20,6 +21,8 @@ export default function AccessControlPage() {
     const router = useRouter();
     const [anomalies, setAnomalies] = useState<AccessAnomaly[]>([]);
     const [members, setMembers] = useState<Member[]>([]);
+    const [isConfirmRestrictOpen, setIsConfirmRestrictOpen] = useState(false);
+    const [targetMember, setTargetMember] = useState<{ memberId: string, anomalyId: string } | null>(null);
 
     useEffect(() => {
         dataService.getAnomalies().then(setAnomalies);
@@ -37,14 +40,16 @@ export default function AccessControlPage() {
         setAnomalies(updated);
     };
 
-    const handleRestrict = async (memberId: string, anomalyId: string) => {
+    const handleRestrict = async () => {
+        if (!targetMember || !user) return;
         await dataService.updateMemberStatus(
-            memberId,
+            targetMember.memberId,
             'Restricted',
             `${user?.role}.${user?.name.split(' ')[1] || 'Staff'}`,
-            `Account restricted due to high-severity anomaly ${anomalyId}.`
+            `Account restricted due to high-severity anomaly ${targetMember.anomalyId}.`
         );
-        handleDismiss(anomalyId); // Also clear the anomaly
+        handleDismiss(targetMember.anomalyId); // Also clear the anomaly
+        setIsConfirmRestrictOpen(false);
         router.push('/admin/members');
     };
 
@@ -113,7 +118,10 @@ export default function AccessControlPage() {
                                             <Button
                                                 size="sm"
                                                 className="h-8 bg-signal-red text-white hover:bg-signal-red/90 text-[10px] font-mono uppercase"
-                                                onClick={() => handleRestrict(anom.memberId, anom.id)}
+                                                onClick={() => {
+                                                    setTargetMember({ memberId: anom.memberId, anomalyId: anom.id });
+                                                    setIsConfirmRestrictOpen(true);
+                                                }}
                                             >
                                                 Restrict
                                             </Button>
@@ -175,6 +183,27 @@ export default function AccessControlPage() {
                     </Button>
                 </div>
             </div>
+            <AlertDialog open={isConfirmRestrictOpen} onOpenChange={setIsConfirmRestrictOpen}>
+                <AlertDialogContent className="glass border-signal-red/20 bg-canvas-card">
+                    <AlertDialogHeader>
+                        <AlertDialogTitle className="text-signal-red flex items-center gap-2">
+                            <ShieldAlert className="size-5" /> Confirm Account Restriction
+                        </AlertDialogTitle>
+                        <AlertDialogDescription className="text-sm">
+                            Are you sure you want to restrict this account? This will immediately revoke all building access and notify the security team.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel onClick={() => setIsConfirmRestrictOpen(false)}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            className="bg-signal-red text-white hover:bg-signal-red/90"
+                            onClick={handleRestrict}
+                        >
+                            Confirm Restriction
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }

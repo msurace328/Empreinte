@@ -18,7 +18,8 @@ import {
     DropdownMenuLabel,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Input } from '@/components/ui/input';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/use-auth';
@@ -28,6 +29,7 @@ export default function ApplicationsPage() {
     const [selectedApp, setSelectedApp] = useState<Application | null>(null);
     const [reason, setReason] = useState('');
     const [isActionOpen, setIsActionOpen] = useState(false);
+    const [isConfirmDestructiveOpen, setIsConfirmDestructiveOpen] = useState(false);
     const [currentAction, setCurrentAction] = useState<Application['status'] | null>(null);
     const { user } = useAuth();
 
@@ -38,7 +40,11 @@ export default function ApplicationsPage() {
     const handleAction = (action: Application['status'], app: Application) => {
         setCurrentAction(action);
         setSelectedApp(app);
-        setIsActionOpen(true);
+        if (action === 'Rejected') {
+            setIsConfirmDestructiveOpen(true);
+        } else {
+            setIsActionOpen(true);
+        }
     };
 
     const confirmAction = async () => {
@@ -148,6 +154,9 @@ export default function ApplicationsPage() {
                                                 <DropdownMenuItem className="text-amber-500" onClick={() => handleAction('Waitlisted', app)}>
                                                     <Clock className="mr-2 size-4" /> Waitlist
                                                 </DropdownMenuItem>
+                                                <DropdownMenuItem className="text-blue-500" onClick={() => handleAction('NeedsInfo', app)}>
+                                                    <AlertTriangle className="mr-2 size-4" /> Request Info
+                                                </DropdownMenuItem>
                                                 <DropdownMenuItem className="text-signal-red" onClick={() => handleAction('Rejected', app)}>
                                                     <ShieldAlert className="mr-2 size-4" /> Reject
                                                 </DropdownMenuItem>
@@ -165,7 +174,9 @@ export default function ApplicationsPage() {
                 <DialogContent className="glass border-border-muted sm:max-w-[425px]">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
-                            {currentAction === 'Approved' ? <ShieldCheck className="text-emerald-500" /> : <AlertTriangle className="text-amber-500" />}
+                            {currentAction === 'Approved' ? <ShieldCheck className="text-emerald-500" /> :
+                                currentAction === 'NeedsInfo' ? <AlertTriangle className="text-blue-500" /> :
+                                    <Clock className="text-amber-500" />}
                             Confirm Decision: {currentAction}
                         </DialogTitle>
                         <DialogDescription className="font-mono text-xs uppercase tracking-tight">
@@ -178,7 +189,7 @@ export default function ApplicationsPage() {
                             <Input
                                 value={reason}
                                 onChange={(e) => setReason(e.target.value)}
-                                placeholder="Enter explanation..."
+                                placeholder={currentAction === 'NeedsInfo' ? "Specify what info is missing..." : "Enter explanation..."}
                                 className="bg-canvas-muted border-border-muted"
                             />
                         </div>
@@ -189,6 +200,37 @@ export default function ApplicationsPage() {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            <AlertDialog open={isConfirmDestructiveOpen} onOpenChange={setIsConfirmDestructiveOpen}>
+                <AlertDialogContent className="glass border-signal-red/20 bg-canvas-card">
+                    <AlertDialogHeader>
+                        <AlertDialogTitle className="text-signal-red flex items-center gap-2">
+                            <ShieldAlert className="size-5" /> Confirm Rejection
+                        </AlertDialogTitle>
+                        <AlertDialogDescription className="text-sm">
+                            Are you sure you want to REJECT this application? This action is logged and will notify the candidate.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <div className="py-4">
+                        <label className="text-[10px] uppercase font-mono tracking-widest text-muted-foreground">Rejection Reason</label>
+                        <Input
+                            value={reason}
+                            onChange={(e) => setReason(e.target.value)}
+                            placeholder="e.g. Identity verification failure"
+                            className="bg-canvas-muted border-border-muted mt-2"
+                        />
+                    </div>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel onClick={() => { setIsConfirmDestructiveOpen(false); setReason(''); }}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            className="bg-signal-red text-white hover:bg-signal-red/90"
+                            onClick={confirmAction}
+                        >
+                            Reject Application
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }

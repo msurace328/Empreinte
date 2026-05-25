@@ -39,10 +39,14 @@ export default function SettingsPage() {
                                         </div>
                                         <p className="text-xs text-muted-foreground mt-1">{item.desc}</p>
                                     </div>
-                                    <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">Edit</Button>
+                                    <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground" onClick={() => alert('Role configuration locked for demographic demo.')}>Edit</Button>
                                 </div>
                             ))}
-                            <Button variant="outline" className="w-full glass border-dashed border-border-muted text-xs font-mono uppercase tracking-widest text-muted-foreground">
+                            <Button
+                                variant="outline"
+                                className="w-full glass border-dashed border-border-muted text-xs font-mono uppercase tracking-widest text-muted-foreground"
+                                onClick={() => alert('Custom role definition requires Architect-level permissions.')}
+                            >
                                 + Define New Custom Role
                             </Button>
                         </CardContent>

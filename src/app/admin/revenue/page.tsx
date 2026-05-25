@@ -44,8 +44,14 @@ export default function RevenueIntelligencePage() {
 
     const chartData = Object.entries(revenueByDate).map(([date, amount]) => ({ date, amount })).sort((a: any, b: any) => a.date.localeCompare(b.date));
 
-    const handleApprove = async (id: string) => {
-        await dataService.approveOpportunity(id);
+    const handleAction = async (id: string, status: RevenueOpportunity['status']) => {
+        if (!user) return;
+        await dataService.updateOpportunityStatus(
+            id,
+            status,
+            `${user.role}.${user.name.split(' ')[1] || user.name}`,
+            `${status} via Revenue Intelligence dashboard.`
+        );
         const updated = await dataService.getOpportunities();
         setOpportunities(updated);
     };
@@ -148,21 +154,14 @@ export default function RevenueIntelligencePage() {
                                                 variant="outline"
                                                 size="sm"
                                                 className="flex-1 glass text-[10px] font-mono border-border-muted h-8"
-                                                onClick={() => {
-                                                    dataService.addAuditEntry(
-                                                        `${user?.role}.${user?.name.split(' ')[1] || 'Staff'}`,
-                                                        'DISMISS_OPPORTUNITY',
-                                                        opp.id,
-                                                        'Opportunity dismissed by revenue director.'
-                                                    ).then(() => dataService.getOpportunities().then(setOpportunities));
-                                                }}
+                                                onClick={() => handleAction(opp.id, 'Dismissed')}
                                             >
                                                 DISMISS
                                             </Button>
                                             <Button
                                                 size="sm"
                                                 className="flex-1 bg-signal-cyan text-canvas-black hover:bg-signal-cyan/90 text-[10px] font-mono h-8"
-                                                onClick={() => handleApprove(opp.id)}
+                                                onClick={() => handleAction(opp.id, 'Approved')}
                                             >
                                                 APPROVE <ArrowRight className="ml-1 size-3" />
                                             </Button>

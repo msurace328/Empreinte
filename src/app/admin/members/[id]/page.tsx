@@ -12,11 +12,14 @@ import { SignalBreakdown } from '@/components/member/signal-breakdown';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ShieldCheck, ShieldAlert, History, Activity, Network, MoreVertical, ChevronLeft, MapPin, Calendar, Clock, DollarSign } from 'lucide-react';
+import { ShieldAlert, ShieldCheck, Clock, MapPin, Users, History, ArrowUpRight, Search, CheckCircle2, XCircle, AlertTriangle, ChevronLeft, Activity, Network, MoreVertical, Calendar, DollarSign } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Input } from '@/components/ui/input';
 
 export default function MemberProfilePage() {
     const params = useParams();
@@ -60,6 +63,11 @@ export default function MemberProfilePage() {
         fetchData();
     }, [params.id]);
 
+    const [reason, setReason] = useState('');
+    const [isActionOpen, setIsActionOpen] = useState(false);
+    const [isConfirmRestrictOpen, setIsConfirmRestrictOpen] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+
     if (!data.profile) return <div className="p-8 text-muted-foreground font-mono">Loading dossier...</div>;
 
     const handleRestrict = async () => {
@@ -68,14 +76,26 @@ export default function MemberProfilePage() {
             data.profile.id,
             'Restricted',
             `${user.role}.${user.name.split(' ')[1] || user.name}`,
-            'Administrative restriction triggered from dossier.'
+            reason || 'Administrative restriction triggered from dossier.'
         );
-        router.push('/admin/members');
+        setIsConfirmRestrictOpen(false);
+        setReason('');
+        window.location.reload();
+    };
+
+    const handleReinstate = async () => {
+        if (!user || !data.profile) return;
+        await dataService.updateMemberStatus(
+            data.profile.id,
+            'Active',
+            `${user.role}.${user.name.split(' ')[1] || user.name}`,
+            'Account reinstated after manual review.'
+        );
+        window.location.reload();
     };
 
     const handleApprove = async () => {
         if (!user || !data.profile) return;
-        // If it's an application, approve it
         if ('riskScore' in data.profile && !('trustScore' in data.profile)) {
             await dataService.updateApplicationStatus(
                 data.profile.id,
@@ -96,11 +116,15 @@ export default function MemberProfilePage() {
                     <ChevronLeft className="mr-2 size-4" /> Back to Queue
                 </Button>
                 <div className="flex gap-3">
-                    <Button variant="outline" className="glass font-mono text-[10px] uppercase tracking-widest border-border-muted h-9 px-4">Download Dossier</Button>
-                    {data.profile && 'riskScore' in data.profile && !('trustScore' in data.profile) ? (
+                    <Button variant="outline" className="glass font-mono text-[10px] uppercase tracking-widest border-border-muted h-9 px-4" onClick={() => alert('Dossier download initiated...')}>Download Dossier</Button>
+                    {'riskScore' in data.profile && !('trustScore' in data.profile) ? (
                         <Button onClick={handleApprove} className="bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 font-mono text-[10px] uppercase tracking-widest h-9 px-4 border border-emerald-500/20 transition-all duration-300">Approve Application</Button>
                     ) : (
-                        <Button onClick={handleRestrict} className="bg-signal-red/10 text-signal-red hover:bg-signal-red/20 font-mono text-[10px] uppercase tracking-widest h-9 px-4 border border-signal-red/20 transition-all duration-300">Restrict Account</Button>
+                        data.profile.status === 'Restricted' ? (
+                            <Button onClick={handleReinstate} className="bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 font-mono text-[10px] uppercase tracking-widest h-9 px-4 border border-emerald-500/20 transition-all duration-300 shadow-[0_0_15px_rgba(16,185,129,0.2)]">Reinstate Account</Button>
+                        ) : (
+                            <Button onClick={() => setIsConfirmRestrictOpen(true)} className="bg-signal-red/10 text-signal-red hover:bg-signal-red/20 font-mono text-[10px] uppercase tracking-widest h-9 px-4 border border-signal-red/20 transition-all duration-300">Restrict Account</Button>
+                        )
                     )}
                 </div>
             </div>
@@ -272,6 +296,36 @@ export default function MemberProfilePage() {
                     </Card>
                 </div>
             </div>
+            <AlertDialog open={isConfirmRestrictOpen} onOpenChange={setIsConfirmRestrictOpen}>
+                <AlertDialogContent className="glass border-signal-red/20 bg-canvas-card">
+                    <AlertDialogHeader>
+                        <AlertDialogTitle className="text-signal-red flex items-center gap-2">
+                            <ShieldAlert className="size-5" /> Confirm Account Restriction
+                        </AlertDialogTitle>
+                        <AlertDialogDescription className="text-sm">
+                            Are you sure you want to restrict this account? All resource entitlements will be revoked immediately and the member will be notified.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <div className="py-4">
+                        <label className="text-[10px] uppercase font-mono tracking-widest text-muted-foreground">Restriction Reason</label>
+                        <Input
+                            value={reason}
+                            onChange={(e) => setReason(e.target.value)}
+                            placeholder="e.g. Credential sharing detected"
+                            className="bg-canvas-muted border-border-muted mt-2"
+                        />
+                    </div>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel onClick={() => { setIsConfirmRestrictOpen(false); setReason(''); }}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            className="bg-signal-red text-white hover:bg-signal-red/90"
+                            onClick={handleRestrict}
+                        >
+                            Confirm Restriction
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }

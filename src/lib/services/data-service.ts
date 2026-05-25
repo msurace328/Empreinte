@@ -183,10 +183,12 @@ class DataService {
     async getBookings() { return this.bookings; }
     async getBookingsForMember(memberId: string) { return this.bookings.filter(b => b.memberId === memberId); }
 
-    async approveOpportunity(id: string) {
+    async updateOpportunityStatus(id: string, status: RevenueOpportunity['status'], operator: string, reason: string) {
         const opp = this.opportunities.find(o => o.id === id);
-        if (opp) opp.status = 'Approved';
-        this.addAuditEntry('Director.Vance', 'APPROVE_OPPORTUNITY', id, 'Approved by revenue director');
+        if (opp) {
+            opp.status = status;
+            this.addAuditEntry(operator, `${status.toUpperCase()}_OPPORTUNITY`, id, reason);
+        }
         return opp;
     }
 

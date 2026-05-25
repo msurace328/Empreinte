@@ -22,7 +22,7 @@ export interface Application {
     avatarUrl: string;
     tier: MembershipTier;
     appliedDate: string;
-    status: 'Pending' | 'Approved' | 'Waitlisted' | 'Rejected';
+    status: 'Pending' | 'Approved' | 'Waitlisted' | 'Rejected' | 'NeedsInfo';
     riskScore: number;
 }
 

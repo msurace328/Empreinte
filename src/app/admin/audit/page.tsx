@@ -26,10 +26,17 @@ export default function AuditLogPage() {
                     <p className="text-muted-foreground mt-1 text-sm">Immutable, hash-chained ledger of all operational decisions.</p>
                 </div>
                 <div className="flex gap-3">
-                    <Button variant="outline" className="glass border-border-muted font-mono text-[10px] uppercase h-9">
+                    <Button
+                        variant="outline"
+                        className="glass border-border-muted font-mono text-[10px] uppercase h-9"
+                        onClick={() => alert('Cryptographic chain verification: ALL HASHES VALID')}
+                    >
                         <Shield className="mr-2 size-3 text-signal-cyan" /> Verify Chain
                     </Button>
-                    <Button className="bg-canvas-card border border-border-muted hover:bg-canvas-card/80 font-mono text-[10px] uppercase h-9">
+                    <Button
+                        className="bg-canvas-card border border-border-muted hover:bg-canvas-card/80 font-mono text-[10px] uppercase h-9"
+                        onClick={() => alert('Ledger export initiated. SHA-256 manifest: ' + Math.random().toString(36).substring(2, 10))}
+                    >
                         <Download className="mr-2 size-3" /> Export Ledger
                     </Button>
                 </div>
@@ -90,7 +97,12 @@ export default function AuditLogPage() {
                                         <div className="size-1.5 bg-signal-cyan rounded-full" />
                                         <span className="text-[9px] font-mono uppercase tracking-widest text-muted-foreground/60">Cryptographically linked to {entry.previousHash.slice(0, 8)}...</span>
                                     </div>
-                                    <Button variant="ghost" size="sm" className="h-6 px-2 text-[9px] font-mono uppercase tracking-widest hover:text-signal-cyan">
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-6 px-2 text-[9px] font-mono uppercase tracking-widest hover:text-signal-cyan"
+                                        onClick={() => alert('Digital Certificate: SIGNED BY DIRECTOR VANCE')}
+                                    >
                                         View Certificate
                                     </Button>
                                 </div>

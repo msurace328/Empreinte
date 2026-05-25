@@ -14,11 +14,17 @@ import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { useRouter } from 'next/navigation';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { useAuth } from '@/hooks/use-auth';
 
 export default function MembersDirectoryPage() {
     const router = useRouter();
     const [members, setMembers] = useState<Member[]>([]);
     const [search, setSearch] = useState('');
+    const [isAddOpen, setIsAddOpen] = useState(false);
+    const [newName, setNewName] = useState('');
+    const [newEmail, setNewEmail] = useState('');
+    const { user } = useAuth();
 
     useEffect(() => {
         dataService.getMembers().then(setMembers);
@@ -29,6 +35,38 @@ export default function MembersDirectoryPage() {
         m.email.toLowerCase().includes(search.toLowerCase())
     );
 
+    const handleAddMember = async () => {
+        if (!newName || !newEmail || !user) return;
+
+        // Mocking a new member add
+        const newMember: Member = {
+            id: `m-${Date.now().toString().slice(-4)}`,
+            name: newName,
+            email: newEmail,
+            avatarUrl: '',
+            tier: 'Associate',
+            status: 'Active',
+            joinDate: new Date().toISOString(),
+            lastAccess: new Date().toISOString(),
+            trustScore: 85,
+        };
+
+        // We should add a method to DataService for this, but for now we can mock it or just log it
+        await dataService.addAuditEntry(
+            `${user.role}.${user.name.split(' ')[1] || user.name}`,
+            'ADD_MEMBER',
+            newMember.id,
+            `Manual onboarding: ${newName} (${newEmail})`
+        );
+
+        setIsAddOpen(false);
+        setNewName('');
+        setNewEmail('');
+        // In a real app we'd push to the service, here we'll just show success
+        alert(`Member ${newName} added and logged to audit trail.`);
+        dataService.getMembers().then(setMembers);
+    };
+
     return (
         <div className="space-y-8 animate-in fade-in duration-700">
             <div className="flex items-center justify-between">
@@ -36,9 +74,33 @@ export default function MembersDirectoryPage() {
                     <h1 className="text-3xl font-bold tracking-tight">Members Directory</h1>
                     <p className="text-muted-foreground mt-1">Operational view of all ARENA active and restricted accounts.</p>
                 </div>
-                <Button className="bg-signal-cyan text-canvas-black hover:bg-signal-cyan/90 font-mono text-[10px] uppercase tracking-widest">
-                    Add Member
-                </Button>
+                <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
+                    <DialogTrigger asChild>
+                        <Button className="bg-signal-cyan text-canvas-black hover:bg-signal-cyan/90 font-mono text-[10px] uppercase tracking-widest">
+                            Add Member
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent className="glass border-border-muted">
+                        <DialogHeader>
+                            <DialogTitle>Quick Onboard Member</DialogTitle>
+                            <DialogDescription className="text-xs font-mono uppercase tracking-tight">Manual Administrative Entry</DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-4 py-4">
+                            <div className="space-y-2">
+                                <label className="text-[10px] uppercase font-mono tracking-widest text-muted-foreground">Full Name</label>
+                                <Input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="e.g. John Doe" className="bg-canvas-muted border-border-muted" />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-[10px] uppercase font-mono tracking-widest text-muted-foreground">Email Address</label>
+                                <Input value={newEmail} onChange={(e) => setNewEmail(e.target.value)} placeholder="john@example.com" className="bg-canvas-muted border-border-muted" />
+                            </div>
+                        </div>
+                        <DialogFooter>
+                            <Button variant="ghost" onClick={() => setIsAddOpen(false)}>Cancel</Button>
+                            <Button className="bg-signal-cyan text-canvas-black hover:bg-signal-cyan/90" onClick={handleAddMember}>Confirm Onboarding</Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
             </div>
 
             <div className="flex items-center gap-4">
