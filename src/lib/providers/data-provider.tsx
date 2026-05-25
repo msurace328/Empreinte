@@ -1,0 +1,136 @@
+"use client";
+
+import React, { createContext, useContext, useState } from 'react';
+import { Member, Application, RiskSignal, AccessAnomaly, RevenueOpportunity, AuditEntry, Booking } from '@/lib/types';
+import { initialMembers, initialApplications, initialOpportunities, initialAnomalies, initialAuditLog, initialBookings, initialSuites } from '@/lib/services/seed-data';
+
+interface DataContextType {
+    members: Member[];
+    applications: Application[];
+    opportunities: RevenueOpportunity[];
+    anomalies: AccessAnomaly[];
+    auditLog: AuditEntry[];
+    bookings: Booking[];
+    
+    // Actions
+    approveApplication: (appId: string, operator: string, reason: string) => void;
+    rejectApplication: (appId: string, operator: string, reason: string) => void;
+    waitlistApplication: (appId: string, operator: string, reason: string) => void;
+    requestInfoApplication: (appId: string, operator: string, reason: string) => void;
+    restrictMember: (memberId: string, operator: string, reason: string) => void;
+    reinstateMember: (memberId: string, operator: string, reason: string) => void;
+    approveOpportunity: (id: string, operator: string, reason: string) => void;
+    dismissOpportunity: (id: string, operator: string, reason: string) => void;
+    dismissAnomaly: (id: string, operator: string) => void;
+    addMember: (member: Member, operator: string) => void;
+    addAuditEntry: (operator: string, action: string, targetId: string, reason: string) => void;
+}
+
+const DataContext = createContext<DataContextType | undefined>(undefined);
+
+export function DataProvider({ children }: { children: React.ReactNode }) {
+    const [members, setMembers] = useState<Member[]>(initialMembers);
+    const [applications, setApplications] = useState<Application[]>(initialApplications);
+    const [opportunities, setOpportunities] = useState<RevenueOpportunity[]>(initialOpportunities);
+    const [anomalies, setAnomalies] = useState<AccessAnomaly[]>(initialAnomalies);
+    const [auditLog, setAuditLog] = useState<AuditEntry[]>(initialAuditLog);
+    const [bookings] = useState<Booking[]>(initialBookings);
+
+    const addAuditEntry = (operator: string, action: string, targetId: string, reason: string) => {
+        const entry: AuditEntry = {
+            id: `ax-${Date.now().toString().slice(-4)}`,
+            timestamp: new Date().toISOString(),
+            operator,
+            action,
+            targetId,
+            reason,
+            cryptographicHash: `0x${Math.random().toString(16).slice(2, 10)}...${Math.random().toString(16).slice(2, 6)}`
+        };
+        setAuditLog(prev => [entry, ...prev]);
+    };
+
+    const approveApplication = (appId: string, operator: string, reason: string) => {
+        setApplications(prev => prev.map(app => app.id === appId ? { ...app, status: 'Approved' } : app));
+        
+        const app = applications.find(a => a.id === appId);
+        if (app) {
+            const newMember: Member = {
+                id: `m-${app.id.split('-')[1]}`,
+                name: app.name,
+                email: app.email,
+                avatarUrl: app.avatarUrl,
+                tier: app.tier,
+                status: 'Active',
+                joinDate: new Date().toISOString(),
+                lastAccess: new Date().toISOString(),
+                trustScore: 100 - app.riskScore,
+            };
+            setMembers(prev => [...prev, newMember]);
+            addAuditEntry(operator, 'APPROVE_APPLICATION', appId, reason || 'Manual application approval.');
+        }
+    };
+
+    const rejectApplication = (appId: string, operator: string, reason: string) => {
+        setApplications(prev => prev.map(app => app.id === appId ? { ...app, status: 'Rejected' } : app));
+        addAuditEntry(operator, 'REJECT_APPLICATION', appId, reason || 'Manual application rejection.');
+    };
+
+    const waitlistApplication = (appId: string, operator: string, reason: string) => {
+        setApplications(prev => prev.map(app => app.id === appId ? { ...app, status: 'Waitlisted' } : app));
+        addAuditEntry(operator, 'WAITLIST_APPLICATION', appId, reason || 'Application waitlisted.');
+    };
+
+    const requestInfoApplication = (appId: string, operator: string, reason: string) => {
+        setApplications(prev => prev.map(app => app.id === appId ? { ...app, status: 'NeedsInfo' } : app));
+        addAuditEntry(operator, 'REQUEST_INFO', appId, reason || 'Requested additional information.');
+    };
+
+    const restrictMember = (memberId: string, operator: string, reason: string) => {
+        setMembers(prev => prev.map(m => m.id === memberId ? { ...m, status: 'Restricted' } : m));
+        addAuditEntry(operator, 'RESTRICT_MEMBER', memberId, reason || 'Account restricted securely.');
+    };
+
+    const reinstateMember = (memberId: string, operator: string, reason: string) => {
+        setMembers(prev => prev.map(m => m.id === memberId ? { ...m, status: 'Active' } : m));
+        addAuditEntry(operator, 'REINSTATE_MEMBER', memberId, reason || 'Account reinstated securely.');
+    };
+
+    const approveOpportunity = (id: string, operator: string, reason: string) => {
+        setOpportunities(prev => prev.map(o => o.id === id ? { ...o, status: 'Approved' } : o));
+        addAuditEntry(operator, 'APPROVE_OPPORTUNITY', id, reason || 'Revenue opportunity enacted.');
+    };
+
+    const dismissOpportunity = (id: string, operator: string, reason: string) => {
+        setOpportunities(prev => prev.map(o => o.id === id ? { ...o, status: 'Dismissed' } : o));
+        addAuditEntry(operator, 'DISMISS_OPPORTUNITY', id, reason || 'Revenue opportunity dismissed.');
+    };
+
+    const dismissAnomaly = (id: string, operator: string) => {
+        setAnomalies(prev => prev.filter(a => a.id !== id));
+        addAuditEntry(operator, 'DISMISS_ANOMALY', id, 'Cleared access anomaly from queue.');
+    };
+
+    const addMember = (member: Member, operator: string) => {
+        setMembers(prev => [...prev, member]);
+        addAuditEntry(operator, 'ADD_MEMBER', member.id, 'Directory manual add member.');
+    };
+
+    return (
+        <DataContext.Provider value={{
+            members, applications, opportunities, anomalies, auditLog, bookings,
+            approveApplication, rejectApplication, waitlistApplication, requestInfoApplication,
+            restrictMember, reinstateMember, approveOpportunity, dismissOpportunity,
+            dismissAnomaly, addMember, addAuditEntry
+        }}>
+            {children}
+        </DataContext.Provider>
+    );
+}
+
+export function useData() {
+    const context = useContext(DataContext);
+    if (context === undefined) {
+        throw new Error('useData must be used within a DataProvider');
+    }
+    return context;
+}
