@@ -171,14 +171,14 @@ class DataService {
         }))
     ];
 
-    async getMembers() { return this.members; }
+    async getMembers() { return [...this.members]; }
     async getMember(id: string) { return this.members.find(m => m.id === id); }
-    async getApplications() { return this.applications; }
+    async getApplications() { return [...this.applications]; }
     async getApplication(id: string) { return this.applications.find(a => a.id === id); }
-    async getAnomalies() { return this.anomalies; }
+    async getAnomalies() { return [...this.anomalies]; }
     async getAnomaliesForMember(memberId: string) { return this.anomalies.filter(a => a.memberId === memberId); }
-    async getOpportunities() { return this.opportunities; }
-    async getAuditLog() { return this.auditLog; }
+    async getOpportunities() { return [...this.opportunities]; }
+    async getAuditLog() { return [...this.auditLog].reverse(); }
     async getSuites() { return this.suites; }
     async getBookings() { return this.bookings; }
     async getBookingsForMember(memberId: string) { return this.bookings.filter(b => b.memberId === memberId); }
@@ -190,6 +190,10 @@ class DataService {
             this.addAuditEntry(operator, `${status.toUpperCase()}_OPPORTUNITY`, id, reason);
         }
         return opp;
+    }
+    async addMember(member: Member) {
+        this.members.push(member);
+        return member;
     }
 
     async updateApplicationStatus(appId: string, status: Application['status'], operator: string, reason: string) {

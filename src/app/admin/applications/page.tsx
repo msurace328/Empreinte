@@ -72,7 +72,7 @@ export default function ApplicationsPage() {
                 </div>
                 <div className="flex gap-2">
                     <Badge variant="outline" className="font-mono text-[10px] py-1 px-3 bg-signal-cyan/5 text-signal-cyan border-signal-cyan/20">
-                        {apps.length} PENDING
+                        {apps.filter(a => !['Approved', 'Rejected'].includes(a.status)).length} PENDING
                     </Badge>
                 </div>
             </div>
@@ -88,7 +88,7 @@ export default function ApplicationsPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {apps.map((app) => (
+                        {apps.filter(a => !['Approved', 'Rejected'].includes(a.status)).map((app) => (
                             <TableRow key={app.id} className="border-border-muted hover:bg-canvas-muted/30 transition-colors">
                                 <TableCell>
                                     <div className="flex items-center gap-3">

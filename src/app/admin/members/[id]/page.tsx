@@ -80,7 +80,8 @@ export default function MemberProfilePage() {
         );
         setIsConfirmRestrictOpen(false);
         setReason('');
-        window.location.reload();
+        const profile = await dataService.getMember(data.profile.id) || await dataService.getApplication(data.profile.id) || null;
+        if (profile) setData(d => ({ ...d, profile }));
     };
 
     const handleReinstate = async () => {
@@ -91,7 +92,8 @@ export default function MemberProfilePage() {
             `${user.role}.${user.name.split(' ')[1] || user.name}`,
             'Account reinstated after manual review.'
         );
-        window.location.reload();
+        const profile = await dataService.getMember(data.profile.id) || await dataService.getApplication(data.profile.id) || null;
+        if (profile) setData(d => ({ ...d, profile }));
     };
 
     const handleApprove = async () => {

@@ -51,7 +51,7 @@ export default function MembersDirectoryPage() {
             trustScore: 85,
         };
 
-        // We should add a method to DataService for this, but for now we can mock it or just log it
+        await dataService.addMember(newMember);
         await dataService.addAuditEntry(
             `${user.role}.${user.name.split(' ')[1] || user.name}`,
             'ADD_MEMBER',
