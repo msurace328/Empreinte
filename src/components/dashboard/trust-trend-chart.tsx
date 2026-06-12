@@ -13,6 +13,26 @@ const data = [
     { date: 'May 25', score: 96 },
 ];
 
+// Glowing marker on the most recent point only.
+const EndDot = (props: { cx?: number; cy?: number; index?: number }) => {
+    const { cx, cy, index } = props;
+    if (cx == null || cy == null || index !== data.length - 1) return null;
+    return (
+        <g>
+            <circle cx={cx} cy={cy} r={7} fill="#5EE6C9" opacity={0.15} />
+            <circle
+                cx={cx}
+                cy={cy}
+                r={3.2}
+                fill="#5EE6C9"
+                stroke="#0B0D10"
+                strokeWidth={1.5}
+                style={{ filter: 'drop-shadow(0 0 6px rgba(94,230,201,0.9))' }}
+            />
+        </g>
+    );
+};
+
 export function TrustTrendChart() {
     return (
         <div className="h-[300px] w-full">
@@ -49,7 +69,12 @@ export function TrustTrendChart() {
                         strokeWidth={2}
                         fillOpacity={1}
                         fill="url(#colorScore)"
-                        animationDuration={2000}
+                        isAnimationActive={true}
+                        animationBegin={200}
+                        animationDuration={1900}
+                        animationEasing="ease-out"
+                        dot={EndDot}
+                        activeDot={{ r: 4, fill: '#5EE6C9', stroke: '#0B0D10', strokeWidth: 2 }}
                     />
                 </AreaChart>
             </ResponsiveContainer>
