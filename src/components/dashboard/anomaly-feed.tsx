@@ -18,10 +18,11 @@ export function AnomalyFeed() {
 
     return (
         <div className="space-y-4">
-            {anomalies.map((anomaly) => (
+            {anomalies.map((anomaly, i) => (
                 <div
                     key={anomaly.id}
-                    className="group relative flex gap-4 p-4 rounded-lg border border-border-muted bg-canvas-muted/50 hover:bg-canvas-card transition-all duration-200"
+                    style={{ animationDelay: `${i * 90}ms`, animationFillMode: 'backwards' }}
+                    className="group relative flex gap-4 p-4 rounded-lg border border-border-muted bg-canvas-muted/50 hover:bg-canvas-card transition-all duration-200 animate-in fade-in slide-in-from-right-4 duration-500 motion-reduce:animate-none"
                 >
                     <div className={cn(
                         "mt-1 size-2 rounded-full",
