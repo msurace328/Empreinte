@@ -13,6 +13,7 @@ import {
     Lock,
     History,
     Network,
+    Ticket,
     LogOut,
     Zap
 } from 'lucide-react';
@@ -42,6 +43,7 @@ const navItems: NavItem[] = [
     { title: 'Review Queue', href: '/admin/applications', icon: UserPlus, roles: ['Admin', 'MembershipDirector'] },
     { title: 'Members', href: '/admin/members', icon: Users, roles: ['Admin', 'MembershipDirector', 'FrontDesk', 'Auditor'] },
     { title: 'Access & Guests', href: '/admin/access', icon: Lock, roles: ['Admin', 'MembershipDirector', 'FrontDesk', 'Auditor'] },
+    { title: 'Suites & Game-Day', href: '/admin/suites', icon: Ticket, roles: ['Admin', 'MembershipDirector', 'FrontDesk', 'Auditor'] },
     { title: 'Member Graph', href: '/admin/graph', icon: Network, roles: ['Admin', 'MembershipDirector', 'Auditor'] },
     { title: 'Revenue Intel', href: '/admin/revenue', icon: DollarSign, roles: ['Admin', 'MembershipDirector'] },
     { title: 'Audit Log', href: '/admin/audit', icon: History, roles: ['Admin', 'Auditor'] },
