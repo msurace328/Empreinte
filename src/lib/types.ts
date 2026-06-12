@@ -86,3 +86,20 @@ export interface Booking {
     amount: number;
     status: 'Completed' | 'Upcoming' | 'Refunded' | 'NoShow';
 }
+
+export type GuestStatus = 'Pending' | 'Approved' | 'Denied';
+
+export interface Guest {
+    id: string;
+    name: string;
+    sponsorId: string;      // member who vouched
+    sponsorName: string;
+    requestedAt: string;
+    status: GuestStatus;
+    trustScore: number;     // 0-100
+    checks: {
+        idVerified: boolean;
+        billingCurrent: boolean;
+        backgroundClear: boolean;
+    };
+}
