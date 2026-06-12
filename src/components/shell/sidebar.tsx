@@ -61,7 +61,7 @@ export function Sidebar() {
         <aside className="w-64 border-r border-border-muted bg-canvas-muted flex flex-col h-screen fixed left-0 top-0 z-50">
             <div className="p-6">
                 <div className="flex items-center gap-3">
-                    <div className="size-8 bg-signal-cyan rounded flex items-center justify-center text-canvas-black font-bold">E</div>
+                    <img src="/logo.svg" alt="Empreinte" className="size-8 rounded" />
                     <span className="font-bold text-xl tracking-tight">Empreinte</span>
                 </div>
                 <div className="mt-2 text-[10px] uppercase tracking-widest text-muted-foreground font-mono">Arena Operations</div>
