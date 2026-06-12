@@ -1,8 +1,8 @@
 "use client";
 
 import React, { createContext, useContext, useState } from 'react';
-import { Member, Application, RiskSignal, AccessAnomaly, RevenueOpportunity, AuditEntry, Booking } from '@/lib/types';
-import { initialMembers, initialApplications, initialOpportunities, initialAnomalies, initialAuditLog, initialBookings, initialSuites } from '@/lib/services/seed-data';
+import { Member, Application, RiskSignal, AccessAnomaly, RevenueOpportunity, AuditEntry, Booking, Guest } from '@/lib/types';
+import { initialMembers, initialApplications, initialOpportunities, initialAnomalies, initialAuditLog, initialBookings, initialSuites, initialGuests } from '@/lib/services/seed-data';
 
 interface DataContextType {
     members: Member[];
@@ -11,18 +11,22 @@ interface DataContextType {
     anomalies: AccessAnomaly[];
     auditLog: AuditEntry[];
     bookings: Booking[];
-    
+    guests: Guest[];
+
     // Actions
     approveApplication: (appId: string, operator: string, reason: string) => void;
     rejectApplication: (appId: string, operator: string, reason: string) => void;
     waitlistApplication: (appId: string, operator: string, reason: string) => void;
     requestInfoApplication: (appId: string, operator: string, reason: string) => void;
     restrictMember: (memberId: string, operator: string, reason: string) => void;
+    watchMember: (memberId: string, operator: string, reason: string) => void;
     reinstateMember: (memberId: string, operator: string, reason: string) => void;
     approveOpportunity: (id: string, operator: string, reason: string) => void;
     dismissOpportunity: (id: string, operator: string, reason: string) => void;
     dismissAnomaly: (id: string, operator: string) => void;
     addMember: (member: Member, operator: string) => void;
+    issueGuestPass: (guestId: string, operator: string, reason: string) => void;
+    denyGuest: (guestId: string, operator: string, reason: string) => void;
     addAuditEntry: (operator: string, action: string, targetId: string, reason: string) => void;
 }
 
@@ -35,6 +39,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     const [anomalies, setAnomalies] = useState<AccessAnomaly[]>(initialAnomalies);
     const [auditLog, setAuditLog] = useState<AuditEntry[]>(initialAuditLog);
     const [bookings] = useState<Booking[]>(initialBookings);
+    const [guests, setGuests] = useState<Guest[]>(initialGuests);
 
     const addAuditEntry = (operator: string, action: string, targetId: string, reason: string) => {
         const entry: AuditEntry = {
@@ -51,7 +56,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
     const approveApplication = (appId: string, operator: string, reason: string) => {
         setApplications(prev => prev.map(app => app.id === appId ? { ...app, status: 'Approved' } : app));
-        
+
         const app = applications.find(a => a.id === appId);
         if (app) {
             const newMember: Member = {
@@ -90,6 +95,11 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         addAuditEntry(operator, 'RESTRICT_MEMBER', memberId, reason || 'Account restricted securely.');
     };
 
+    const watchMember = (memberId: string, operator: string, reason: string) => {
+        setMembers(prev => prev.map(m => m.id === memberId ? { ...m, status: 'Watch' } : m));
+        addAuditEntry(operator, 'WATCH_MEMBER', memberId, reason || 'Account moved to watchlist for monitoring.');
+    };
+
     const reinstateMember = (memberId: string, operator: string, reason: string) => {
         setMembers(prev => prev.map(m => m.id === memberId ? { ...m, status: 'Active' } : m));
         addAuditEntry(operator, 'REINSTATE_MEMBER', memberId, reason || 'Account reinstated securely.');
@@ -115,12 +125,22 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         addAuditEntry(operator, 'ADD_MEMBER', member.id, 'Directory manual add member.');
     };
 
+    const issueGuestPass = (guestId: string, operator: string, reason: string) => {
+        setGuests(prev => prev.map(g => g.id === guestId ? { ...g, status: 'Approved' } : g));
+        addAuditEntry(operator, 'ISSUE_GUEST_PASS', guestId, reason || 'Guest pass issued after vetting.');
+    };
+
+    const denyGuest = (guestId: string, operator: string, reason: string) => {
+        setGuests(prev => prev.map(g => g.id === guestId ? { ...g, status: 'Denied' } : g));
+        addAuditEntry(operator, 'DENY_GUEST', guestId, reason || 'Guest request denied at vetting.');
+    };
+
     return (
         <DataContext.Provider value={{
-            members, applications, opportunities, anomalies, auditLog, bookings,
+            members, applications, opportunities, anomalies, auditLog, bookings, guests,
             approveApplication, rejectApplication, waitlistApplication, requestInfoApplication,
-            restrictMember, reinstateMember, approveOpportunity, dismissOpportunity,
-            dismissAnomaly, addMember, addAuditEntry
+            restrictMember, watchMember, reinstateMember, approveOpportunity, dismissOpportunity,
+            dismissAnomaly, addMember, issueGuestPass, denyGuest, addAuditEntry
         }}>
             {children}
         </DataContext.Provider>
