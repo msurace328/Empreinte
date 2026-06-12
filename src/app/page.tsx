@@ -30,8 +30,8 @@ function ScanLogo() {
                     100% { top: 104%; opacity: 0; }
                 }
                 @keyframes empGrant {
-                    0%, 60%  { opacity: 0; transform: translateY(2px); }
-                    75%      { opacity: 1; transform: translateY(0); }
+                    0%, 70%  { opacity: 0; transform: translateY(2px); }
+                    90%      { opacity: 1; transform: translateY(0); }
                     100%     { opacity: 1; transform: translateY(0); }
                 }
                 @media (prefers-reduced-motion: reduce) {
@@ -59,14 +59,14 @@ function ScanLogo() {
                         top: '-10%',
                         background: 'linear-gradient(90deg, transparent, #ECFFFA, transparent)',
                         boxShadow: '0 0 12px 2px rgba(236,255,250,0.85)',
-                        animation: 'empScan 2.4s ease-in-out infinite',
+                        animation: 'empScan 2.4s ease-in-out forwards',
                     }}
                 />
             </div>
 
             <div
                 className="emp-grant inline-flex items-center gap-1.5 rounded-full border border-signal-cyan/30 bg-signal-cyan/10 px-3 py-1 text-[10px] font-mono uppercase tracking-[0.2em] text-signal-cyan"
-                style={{ animation: 'empGrant 2.4s ease-out infinite' }}
+                style={{ animation: 'empGrant 2.8s ease-out forwards' }}
             >
                 <Check className="size-3" /> Access Granted
             </div>
