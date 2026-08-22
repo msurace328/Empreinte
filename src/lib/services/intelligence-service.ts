@@ -32,7 +32,7 @@ class IntelligenceService {
                     value: 'Duplicate Document',
                     confidence: 1.0,
                     impact: 'Negative',
-                    reasoning: 'The passport submitted was previously used by Member m-001 (Alexander Sterling). This is a high-confidence identity theft signal.',
+                    reasoning: 'The passport submitted was previously used by Member m-001 (Kevin Balfe). This is a high-confidence identity theft signal.',
                     provenance: 'Persona/Veriff Integration',
                 }
             ];

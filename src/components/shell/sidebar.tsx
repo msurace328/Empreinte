@@ -76,6 +76,7 @@ export function Sidebar() {
                         <Link
                             key={item.href}
                             href={item.href}
+                            data-tour-id={item.href}
                             className={cn(
                                 "flex items-center gap-3 px-3 py-2.5 rounded-md text-sm transition-all duration-200 group",
                                 isActive
@@ -96,14 +97,14 @@ export function Sidebar() {
             <div className="p-4 border-t border-border-muted">
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <button className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-canvas-card transition-colors text-left group">
+                        <button data-tour-id="role-switcher" className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-canvas-card transition-colors text-left group">
                             <Avatar className="size-8 border border-border-muted">
                                 <AvatarImage src={user.role === 'Admin' ? 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100' : ''} />
                                 <AvatarFallback className="bg-canvas-card text-xs">{user.name.charAt(0)}</AvatarFallback>
                             </Avatar>
                             <div className="flex-1 min-w-0">
                                 <p className="text-sm font-medium leading-none truncate">{user.name}</p>
-                                <p className="text-[10px] text-muted-foreground font-mono mt-1 uppercase tracking-wider">{user.role}</p>
+                                <p className="text-[10px] text-muted-foreground font-mono mt-1 uppercase tracking-wider">{user.title ?? user.role}</p>
                             </div>
                             <Activity className="size-3 text-muted-foreground group-hover:text-signal-cyan transition-colors" />
                         </button>

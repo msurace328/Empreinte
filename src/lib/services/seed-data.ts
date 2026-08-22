@@ -4,7 +4,7 @@ import { Member, Application, AccessAnomaly, RevenueOpportunity, AuditEntry, Sui
 export const initialMembers: Member[] = [
     {
         id: 'm-001',
-        name: 'Alexander Sterling',
+        name: 'Kevin Balfe',
         email: 'alex@sterling-holdings.com',
         avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200',
         tier: 'Founder',
@@ -186,7 +186,7 @@ export const initialGuests: Guest[] = [
         id: 'gp-3309',
         name: 'Nia Okafor',
         sponsorId: 'm-001',
-        sponsorName: 'Alexander Sterling',
+        sponsorName: 'Kevin Balfe',
         requestedAt: '2026-05-25T07:31:00Z',
         status: 'Pending',
         trustScore: 58,

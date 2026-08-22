@@ -106,7 +106,7 @@ export default function Home() {
                     <p className="mt-5 text-muted-foreground text-sm sm:text-base leading-relaxed max-w-2xl mx-auto">
                         Empreinte vets members, governs who gets through the door, logs every decision in an
                         immutable trail, and surfaces the revenue your suites are leaving on the table. Built for
-                        ARENA&apos;s premium membership operation.
+                        ARENA — where a membership is your key to private suites at sporting events and concerts.
                     </p>
                     <div className="mt-8">
                         <Link

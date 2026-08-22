@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Sidebar } from './sidebar';
+import { GuidedTour } from './guided-tour';
 import { useAuth } from '@/hooks/use-auth';
 import { MemberPortalDashboard } from '@/components/member/portal-dashboard';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -39,6 +40,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     return (
         <div className="flex bg-canvas-black min-h-screen">
             <Sidebar />
+            <GuidedTour />
             <main className="flex-1 pl-64">
                 <div className="max-w-[1600px] mx-auto p-8">
                     {children}

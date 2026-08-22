@@ -2,7 +2,7 @@
 
 **Precision trust operating layer for premium membership operations.**
 
-Empreinte vets members, governs who gets through the door, logs every decision in an immutable trail, and surfaces the revenue your suites are leaving on the table. Built for ARENA's premium suite membership operation.
+Empreinte vets members, governs who gets through the door, logs every decision in an immutable trail, and surfaces the revenue your suites are leaving on the table. Built for ARENA, where a membership buys access to private suites at sporting events and concerts.
 
 ![Next.js](https://img.shields.io/badge/Next.js-16-black) ![React](https://img.shields.io/badge/React-19-blue) ![Tailwind](https://img.shields.io/badge/Tailwind-4-38bdf8)
 
