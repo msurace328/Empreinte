@@ -122,3 +122,20 @@ export interface MessageThread {
     unread: boolean;
     messages: ThreadMessage[];
 }
+
+export type CheckInResult = 'Admitted' | 'Denied' | 'Override';
+
+export interface CheckInEvent {
+    id: string;
+    subjectId: string;          // member or guest id
+    subjectName: string;
+    subjectKind: 'Member' | 'Guest';
+    tier?: MembershipTier;
+    sponsorName?: string;       // for guests
+    result: CheckInResult;
+    reason: string;
+    gate: string;
+    operator: string;
+    at: string;
+    trustScore: number;
+}

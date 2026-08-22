@@ -23,6 +23,10 @@ const STEPS: TourStep[] = [
         body: 'Mission control. Active members, pending applications, open risk flags, and the aggregate Trust-Health Index — with a live anomaly feed streaming behavioral and identity signals as they happen.',
     },
     {
+        anchor: '/admin/door', route: '/admin/door', title: 'Door Console', roles: ['Admin', 'MembershipDirector', 'FrontDesk'],
+        body: 'The front desk lives here. Search whoever is standing in front of you, and the console returns a decision with the reason behind it — cleared, watchlisted, access pulled, or guest vetting incomplete. Admitting stamps their record; overriding a refusal is recorded against your name and surfaces on the CEO dashboard.',
+    },
+    {
         anchor: '/admin/applications', route: '/admin/applications', title: 'Review Queue', roles: ['Admin', 'MembershipDirector'],
         body: 'Every membership application lands here for vetting. Each applicant carries a computed risk state — approve, waitlist, request more info, or reject, and every decision is written to the audit log with your name on it.',
     },
@@ -59,8 +63,8 @@ const STEPS: TourStep[] = [
         body: 'Role-based access control for ARENA staff and the platform security posture: encryption at rest, audit hashing, session expiry, and PII minimization defaults.',
     },
     {
-        anchor: 'role-switcher', title: 'You are viewing as CEO', roles: ALL,
-        body: 'This console adapts to whoever signs in. Switch to Membership Director, Front Desk, Auditor — or Member, to see the self-service portal your members get. Each role sees only the tabs it is cleared for.',
+        anchor: 'role-switcher', title: 'Every desk sees its own console', roles: ALL,
+        body: 'This console adapts to whoever signs in. A front-desk operator opens straight into the Door Console and never sees revenue or the vault; an auditor gets read-only oversight; the founder seat sees everything. Switch roles here to try each desk — or Member, for the self-service portal. Press Cmd-K anywhere to jump to any page, member, or applicant.',
     },
 ];
 

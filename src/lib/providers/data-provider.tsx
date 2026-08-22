@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { Member, Application, RiskSignal, AccessAnomaly, RevenueOpportunity, AuditEntry, Booking, Guest, MessageThread } from '@/lib/types';
+import { Member, Application, RiskSignal, AccessAnomaly, RevenueOpportunity, AuditEntry, Booking, Guest, MessageThread, CheckInEvent, CheckInResult } from '@/lib/types';
 import { initialMembers, initialApplications, initialOpportunities, initialAnomalies, initialAuditLog, initialBookings, initialSuites, initialGuests, initialThreads } from '@/lib/services/seed-data';
 
 interface DataContextType {
@@ -13,6 +13,7 @@ interface DataContextType {
     bookings: Booking[];
     guests: Guest[];
     threads: MessageThread[];
+    checkIns: CheckInEvent[];
 
     // Actions
     approveApplication: (appId: string, operator: string, reason: string) => void;
@@ -33,6 +34,10 @@ interface DataContextType {
     replyToThread: (threadId: string, operator: string, body: string) => void;
     markThreadRead: (threadId: string) => void;
     resetDemoData: () => void;
+    recordCheckIn: (input: {
+        subjectId: string; subjectKind: 'Member' | 'Guest'; result: CheckInResult;
+        reason: string; gate: string; operator: string;
+    }) => CheckInEvent | null;
 }
 
 const STORE_KEY = 'empreinte_session_v1';
@@ -48,6 +53,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     const [bookings] = useState<Booking[]>(initialBookings);
     const [guests, setGuests] = useState<Guest[]>(initialGuests);
     const [threads, setThreads] = useState<MessageThread[]>(initialThreads);
+    const [checkIns, setCheckIns] = useState<CheckInEvent[]>([]);
     const [hydrated, setHydrated] = useState(false);
 
     // Restore the session on mount, then keep it in sync. Seeded defaults are
@@ -64,6 +70,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
                 if (snap.auditLog) setAuditLog(snap.auditLog);
                 if (snap.guests) setGuests(snap.guests);
                 if (snap.threads) setThreads(snap.threads);
+                if (snap.checkIns) setCheckIns(snap.checkIns);
             }
         } catch {
             // Corrupt or unavailable storage just falls back to seed data.
@@ -75,12 +82,12 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         if (!hydrated) return;
         try {
             localStorage.setItem(STORE_KEY, JSON.stringify({
-                members, applications, opportunities, anomalies, auditLog, guests, threads,
+                members, applications, opportunities, anomalies, auditLog, guests, threads, checkIns,
             }));
         } catch {
             // Quota or private-mode failures are non-fatal; the session just stops persisting.
         }
-    }, [hydrated, members, applications, opportunities, anomalies, auditLog, guests, threads]);
+    }, [hydrated, members, applications, opportunities, anomalies, auditLog, guests, threads, checkIns]);
 
     const resetDemoData = () => {
         try { localStorage.removeItem(STORE_KEY); } catch {}
@@ -91,6 +98,38 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         setAuditLog(initialAuditLog);
         setGuests(initialGuests);
         setThreads(initialThreads);
+        setCheckIns([]);
+    };
+
+    // The door. Admitting someone stamps their lastAccess so the roster's
+    // staleness view stays honest, and every scan is audited either way.
+    const recordCheckIn: DataContextType['recordCheckIn'] = ({ subjectId, subjectKind, result, reason, gate, operator }) => {
+        const member = subjectKind === 'Member' ? members.find(m => m.id === subjectId) : undefined;
+        const guest = subjectKind === 'Guest' ? guests.find(g => g.id === subjectId) : undefined;
+        const subject = member ?? guest;
+        if (!subject) return null;
+
+        const at = new Date().toISOString();
+        const event: CheckInEvent = {
+            id: `ci-${String(Date.now()).slice(-6)}`,
+            subjectId,
+            subjectName: subject.name,
+            subjectKind,
+            tier: member?.tier,
+            sponsorName: guest?.sponsorName,
+            result,
+            reason,
+            gate,
+            operator,
+            at,
+            trustScore: subject.trustScore,
+        };
+        setCheckIns(prev => [event, ...prev]);
+        if (result !== 'Denied' && member) {
+            setMembers(prev => prev.map(m => m.id === subjectId ? { ...m, lastAccess: at } : m));
+        }
+        addAuditEntry(operator, `CHECKIN_${result.toUpperCase()}`, subjectId, `${gate} · ${reason}`);
+        return event;
     };
 
     const addAuditEntry = (operator: string, action: string, targetId: string, reason: string) => {
@@ -229,11 +268,11 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
     return (
         <DataContext.Provider value={{
-            members, applications, opportunities, anomalies, auditLog, bookings, guests, threads,
+            members, applications, opportunities, anomalies, auditLog, bookings, guests, threads, checkIns,
             approveApplication, rejectApplication, waitlistApplication, requestInfoApplication,
             restrictMember, watchMember, reinstateMember, approveOpportunity, dismissOpportunity,
             dismissAnomaly, addMember, issueGuestPass, denyGuest, addAuditEntry,
-            addApplication, replyToThread, markThreadRead, resetDemoData
+            addApplication, replyToThread, markThreadRead, resetDemoData, recordCheckIn
         }}>
             {children}
         </DataContext.Provider>

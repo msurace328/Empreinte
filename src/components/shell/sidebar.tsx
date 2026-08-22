@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
+    DoorOpen,
     RotateCcw,
     Inbox,
     LayoutDashboard,
@@ -43,6 +44,7 @@ interface NavItem {
 
 const navItems: NavItem[] = [
     { title: 'Command Center', href: '/admin', icon: LayoutDashboard, roles: ['Admin', 'MembershipDirector', 'FrontDesk', 'Auditor'] },
+    { title: 'Door Console', href: '/admin/door', icon: DoorOpen, roles: ['Admin', 'MembershipDirector', 'FrontDesk'] },
     { title: 'Review Queue', href: '/admin/applications', icon: UserPlus, roles: ['Admin', 'MembershipDirector'] },
     { title: 'Members', href: '/admin/members', icon: Users, roles: ['Admin', 'MembershipDirector', 'FrontDesk', 'Auditor'] },
     { title: 'Inbox', href: '/admin/inbox', icon: Inbox, roles: ['Admin', 'MembershipDirector', 'FrontDesk'] },

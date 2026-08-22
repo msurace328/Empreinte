@@ -10,7 +10,8 @@ Empreinte vets members, governs who gets through the door, logs every decision i
 
 | Module | Route | What it does |
 | --- | --- | --- |
-| **Command Center** | `/admin` | Trust-health index, live anomaly feed, KPIs at a glance |
+| **Command Center** | `/admin` | Role-aware home: live KPIs, anomaly feed, recent decisions, CSV export |
+| **Door Console** | `/admin/door` | The front desk: look someone up, get a decision with its reason, admit/deny/override |
 | **Review Queue** | `/admin/applications` | Applicant vetting with risk scoring — approve, waitlist, request info, reject |
 | **Inbox** | `/admin/inbox` | Member & guest threads tied to identity — live trust score in the header, replies audited |
 | **Members** | `/admin/members` | Roster with per-member dossiers: identity intelligence, anomalies, bookings, audit trail |
@@ -70,9 +71,23 @@ Without the key everything else works; the button surfaces a clear error instead
 
 Every admin page carries a **Tour** button (bottom-right). It spotlights each sidebar tab in turn with a written explanation of what it does, navigating the page as it goes. Arrow keys or the on-screen arrows step through it; steps are filtered to the signed-in role. It opens itself once on a first visit.
 
-## Roles
+## Roles — each desk gets its own console
 
-The demo auth (`src/hooks/use-auth.tsx`) supports five roles with scoped navigation: **Admin**, **Membership Director**, **Front Desk**, **Auditor**, and **Member**. Switch roles from the user menu in the sidebar.
+Roles are not just a nav filter; they change where you land and what exists.
+
+| Role | Lands on | Sees |
+| --- | --- | --- |
+| **Admin** (Kevin Balfe, CEO) | Command Center | Everything, including the Moonshot Vault |
+| **Membership Director** | Command Center | Vetting, members, access, revenue — no security settings |
+| **Front Desk** | **Door Console** | Door, members, inbox, access, suites — no revenue, audit, or graph |
+| **Auditor** | Command Center | Read-only oversight and the immutable record |
+| **Member** | Member portal | Their own bookings, guest credits, and suite reservations |
+
+Switch roles from the user menu in the sidebar.
+
+## Keyboard
+
+**⌘K / Ctrl-K** opens the command palette anywhere in the console — jump to any page, member, or applicant. Arrow keys navigate, ↵ opens, esc closes.
 
 ## Stack
 

@@ -1,14 +1,25 @@
 'use client';
 
 import React from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import { Sidebar } from './sidebar';
 import { GuidedTour } from './guided-tour';
+import { CommandPalette } from './command-palette';
 import { useAuth } from '@/hooks/use-auth';
 import { MemberPortalDashboard } from '@/components/member/portal-dashboard';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export function AppShell({ children }: { children: React.ReactNode }) {
     const { user, isLoading } = useAuth();
+    const pathname = usePathname();
+    const router = useRouter();
+
+    // A front-desk operator's home is the door, not the analytics dashboard.
+    React.useEffect(() => {
+        if (!isLoading && user?.role === 'FrontDesk' && pathname === '/admin') {
+            router.replace('/admin/door');
+        }
+    }, [isLoading, user?.role, pathname, router]);
 
     if (isLoading) {
         return (
@@ -41,6 +52,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div className="flex bg-canvas-black min-h-screen">
             <Sidebar />
             <GuidedTour />
+            <CommandPalette />
             <main className="flex-1 pl-64">
                 <div className="max-w-[1600px] mx-auto p-8">
                     {children}
