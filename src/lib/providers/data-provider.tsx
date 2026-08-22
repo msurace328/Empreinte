@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { Member, Application, RiskSignal, AccessAnomaly, RevenueOpportunity, AuditEntry, Booking, Guest, MessageThread, CheckInEvent, CheckInResult } from '@/lib/types';
+import { Member, Application, RiskSignal, AccessAnomaly, RevenueOpportunity, AuditEntry, Booking, Guest, MessageThread, CheckInEvent, CheckInResult, Invoice } from '@/lib/types';
 import { initialMembers, initialApplications, initialOpportunities, initialAnomalies, initialAuditLog, initialBookings, initialSuites, initialGuests, initialThreads } from '@/lib/services/seed-data';
 
 interface DataContextType {
@@ -14,6 +14,7 @@ interface DataContextType {
     guests: Guest[];
     threads: MessageThread[];
     checkIns: CheckInEvent[];
+    invoices: Invoice[];
 
     // Actions
     approveApplication: (appId: string, operator: string, reason: string) => void;
@@ -34,13 +35,36 @@ interface DataContextType {
     replyToThread: (threadId: string, operator: string, body: string) => void;
     markThreadRead: (threadId: string) => void;
     resetDemoData: () => void;
+    backend: 'kv' | 'memory' | 'unavailable';
+    hydrated: boolean;
+    sponsorGuest: (input: { name: string; sponsorId: string; sponsorName: string }) => Guest;
+    issueInvoice: (input: { applicationId: string; operator: string }) => Invoice | null;
+    markInvoicePaid: (invoiceId: string) => Invoice | null;
     recordCheckIn: (input: {
         subjectId: string; subjectKind: 'Member' | 'Guest'; result: CheckInResult;
         reason: string; gate: string; operator: string;
     }) => CheckInEvent | null;
 }
 
-const STORE_KEY = 'empreinte_session_v1';
+// Bump when the seed data shape or content changes. Sessions saved under an
+// older version are discarded on load, so shipped seed updates actually reach
+// people who already have a session stored.
+const SESSION_VERSION = 2;
+const STORE_KEY = `empreinte_session_v${SESSION_VERSION}`;
+
+// Kept in sync with the TIERS constant the public pricing page renders.
+const TIER_PRICING: Record<Member['tier'], { price: number; cadence: string }> = {
+    Associate: { price: 45000, cadence: 'per season' },
+    Suite: { price: 165000, cadence: 'per season' },
+    Founder: { price: 400000, cadence: 'per season' },
+};
+
+// Small stable hash so a given application always yields the same demo token.
+function hashString(input: string): number {
+    let h = 0;
+    for (let i = 0; i < input.length; i++) h = (h << 5) - h + input.charCodeAt(i) | 0;
+    return h;
+}
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
@@ -54,43 +78,80 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     const [guests, setGuests] = useState<Guest[]>(initialGuests);
     const [threads, setThreads] = useState<MessageThread[]>(initialThreads);
     const [checkIns, setCheckIns] = useState<CheckInEvent[]>([]);
+    const [invoices, setInvoices] = useState<Invoice[]>([]);
     const [hydrated, setHydrated] = useState(false);
+    const [backend, setBackend] = useState<'kv' | 'memory' | 'unavailable'>('unavailable');
 
-    // Restore the session on mount, then keep it in sync. Seeded defaults are
-    // used whenever nothing has been stored yet.
+    // Restore the session on mount, then keep it in sync. The server is the
+    // source of truth when a store is configured; localStorage is the offline
+    // mirror so the demo still works with no backend at all.
     useEffect(() => {
-        try {
-            const raw = localStorage.getItem(STORE_KEY);
-            if (raw) {
-                const snap = JSON.parse(raw);
-                if (snap.members) setMembers(snap.members);
-                if (snap.applications) setApplications(snap.applications);
-                if (snap.opportunities) setOpportunities(snap.opportunities);
-                if (snap.anomalies) setAnomalies(snap.anomalies);
-                if (snap.auditLog) setAuditLog(snap.auditLog);
-                if (snap.guests) setGuests(snap.guests);
-                if (snap.threads) setThreads(snap.threads);
-                if (snap.checkIns) setCheckIns(snap.checkIns);
+        let cancelled = false;
+
+        const apply = (snap: Record<string, unknown> | null) => {
+            if (!snap || cancelled) return false;
+            if (snap.version !== SESSION_VERSION) return false;
+            if (snap.members) setMembers(snap.members as Member[]);
+            if (snap.applications) setApplications(snap.applications as Application[]);
+            if (snap.opportunities) setOpportunities(snap.opportunities as RevenueOpportunity[]);
+            if (snap.anomalies) setAnomalies(snap.anomalies as AccessAnomaly[]);
+            if (snap.auditLog) setAuditLog(snap.auditLog as AuditEntry[]);
+            if (snap.guests) setGuests(snap.guests as Guest[]);
+            if (snap.threads) setThreads(snap.threads as MessageThread[]);
+            if (snap.checkIns) setCheckIns(snap.checkIns as CheckInEvent[]);
+            if (snap.invoices) setInvoices(snap.invoices as Invoice[]);
+            return true;
+        };
+
+        (async () => {
+            let restored = false;
+            try {
+                const res = await fetch('/api/state', { cache: 'no-store' });
+                if (res.ok) {
+                    const { data, backend } = await res.json();
+                    if (!cancelled) setBackend(backend ?? 'unavailable');
+                    restored = apply(data);
+                }
+            } catch {
+                // Server unreachable — fall through to the local mirror.
             }
-        } catch {
-            // Corrupt or unavailable storage just falls back to seed data.
-        }
-        setHydrated(true);
+
+            if (!restored) {
+                try {
+                    const raw = localStorage.getItem(STORE_KEY);
+                    if (raw) apply(JSON.parse(raw));
+                } catch {
+                    // Corrupt or unavailable storage just falls back to seed data.
+                }
+            }
+            if (!cancelled) setHydrated(true);
+        })();
+
+        return () => { cancelled = true; };
     }, []);
 
     useEffect(() => {
         if (!hydrated) return;
+        const snapshot = { version: SESSION_VERSION, members, applications, opportunities, anomalies, auditLog, guests, threads, checkIns, invoices };
         try {
-            localStorage.setItem(STORE_KEY, JSON.stringify({
-                members, applications, opportunities, anomalies, auditLog, guests, threads, checkIns,
-            }));
+            localStorage.setItem(STORE_KEY, JSON.stringify(snapshot));
         } catch {
             // Quota or private-mode failures are non-fatal; the session just stops persisting.
         }
-    }, [hydrated, members, applications, opportunities, anomalies, auditLog, guests, threads, checkIns]);
+        // Debounced write-through so a burst of edits is one request.
+        const t = setTimeout(() => {
+            fetch('/api/state', {
+                method: 'PUT',
+                headers: { 'content-type': 'application/json' },
+                body: JSON.stringify(snapshot),
+            }).catch(() => { /* offline is fine; the local mirror still holds */ });
+        }, 700);
+        return () => clearTimeout(t);
+    }, [hydrated, members, applications, opportunities, anomalies, auditLog, guests, threads, checkIns, invoices]);
 
     const resetDemoData = () => {
         try { localStorage.removeItem(STORE_KEY); } catch {}
+        fetch('/api/state', { method: 'DELETE' }).catch(() => {});
         setMembers(initialMembers);
         setApplications(initialApplications);
         setOpportunities(initialOpportunities);
@@ -99,6 +160,41 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         setGuests(initialGuests);
         setThreads(initialThreads);
         setCheckIns([]);
+        setInvoices([]);
+    };
+
+    // Vetting cleared, so now we ask for money — never before. The checkout
+    // token stands in for a Stripe Checkout Session id.
+    const issueInvoice: DataContextType['issueInvoice'] = ({ applicationId, operator }) => {
+        const app = applications.find(a => a.id === applicationId);
+        if (!app) return null;
+        const existing = invoices.find(i => i.applicationId === applicationId && i.status === 'Awaiting payment');
+        if (existing) return existing;
+        const plan = TIER_PRICING[app.tier];
+        const invoice: Invoice = {
+            id: `inv-${String(Date.now()).slice(-6)}`,
+            applicationId,
+            memberName: app.name,
+            email: app.email,
+            tier: app.tier,
+            amount: plan.price,
+            cadence: plan.cadence,
+            status: 'Awaiting payment',
+            issuedAt: new Date().toISOString(),
+            checkoutToken: `cs_demo_${Math.abs(hashString(applicationId + app.email)).toString(36)}`,
+        };
+        setInvoices(prev => [invoice, ...prev]);
+        addAuditEntry(operator, 'INVOICE_ISSUED', invoice.id, `${app.tier} membership · $${plan.price.toLocaleString()} ${plan.cadence} · sent to ${app.email}.`);
+        return invoice;
+    };
+
+    const markInvoicePaid: DataContextType['markInvoicePaid'] = (invoiceId) => {
+        const invoice = invoices.find(i => i.id === invoiceId);
+        if (!invoice || invoice.status === 'Paid') return invoice ?? null;
+        const paidAt = new Date().toISOString();
+        setInvoices(prev => prev.map(i => i.id === invoiceId ? { ...i, status: 'Paid', paidAt } : i));
+        addAuditEntry('payments.webhook', 'PAYMENT_RECEIVED', invoice.id, `$${invoice.amount.toLocaleString()} received for ${invoice.tier} membership.`);
+        return { ...invoice, status: 'Paid', paidAt };
     };
 
     // The door. Admitting someone stamps their lastAccess so the roster's
@@ -150,8 +246,18 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
         const app = applications.find(a => a.id === appId);
         if (app) {
+            // Never derive a member id from the application number — app-001
+            // would mint m-001 and collide with an existing member. Allocate
+            // the next free id instead.
+            const taken = new Set(members.map(m => m.id));
+            let n = members.length + 1;
+            let nextId = `m-${String(n).padStart(3, '0')}`;
+            while (taken.has(nextId)) {
+                n += 1;
+                nextId = `m-${String(n).padStart(3, '0')}`;
+            }
             const newMember: Member = {
-                id: `m-${app.id.split('-')[1]}`,
+                id: nextId,
                 name: app.name,
                 email: app.email,
                 avatarUrl: app.avatarUrl,
@@ -242,6 +348,27 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         return app;
     };
 
+    // A member sponsoring a guest from the portal creates the same vetting task
+    // the front desk sees — one queue, whoever it came from.
+    const sponsorGuest: DataContextType['sponsorGuest'] = ({ name, sponsorId, sponsorName }) => {
+        const sponsor = members.find(m => m.id === sponsorId);
+        const guest: Guest = {
+            id: `gp-${String(Date.now()).slice(-4)}`,
+            name,
+            sponsorId,
+            sponsorName,
+            requestedAt: new Date().toISOString(),
+            status: 'Pending',
+            // A guest inherits some standing from who vouched for them, but must
+            // still clear their own checks before a pass is issued.
+            trustScore: Math.max(30, Math.min(75, Math.round((sponsor?.trustScore ?? 60) * 0.7))),
+            checks: { idVerified: false, billingCurrent: true, backgroundClear: false },
+        };
+        setGuests(prev => [guest, ...prev]);
+        addAuditEntry(`member.${sponsorName}`, 'GUEST_SPONSORED', guest.id, `${sponsorName} sponsored ${name} — awaiting vetting.`);
+        return guest;
+    };
+
     const replyToThread = (threadId: string, operator: string, body: string) => {
         setThreads(prev => prev.map(t => t.id === threadId ? {
             ...t,
@@ -272,7 +399,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
             approveApplication, rejectApplication, waitlistApplication, requestInfoApplication,
             restrictMember, watchMember, reinstateMember, approveOpportunity, dismissOpportunity,
             dismissAnomaly, addMember, issueGuestPass, denyGuest, addAuditEntry,
-            addApplication, replyToThread, markThreadRead, resetDemoData, recordCheckIn
+            addApplication, replyToThread, markThreadRead, resetDemoData, recordCheckIn, backend, hydrated, sponsorGuest, invoices, issueInvoice, markInvoicePaid
         }}>
             {children}
         </DataContext.Provider>

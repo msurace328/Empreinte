@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { Sidebar } from './sidebar';
 import { GuidedTour } from './guided-tour';
 import { CommandPalette } from './command-palette';
+import { AlertCenter } from './alert-center';
 import { useAuth } from '@/hooks/use-auth';
 import { MemberPortalDashboard } from '@/components/member/portal-dashboard';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -53,8 +54,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <Sidebar />
             <GuidedTour />
             <CommandPalette />
-            <main className="flex-1 pl-64">
-                <div className="max-w-[1600px] mx-auto p-8">
+            <AlertCenter />
+            <main className="flex-1 lg:pl-64 pt-14 lg:pt-0">
+                <div className="max-w-[1600px] mx-auto p-4 sm:p-6 lg:p-8">
                     {children}
                 </div>
             </main>

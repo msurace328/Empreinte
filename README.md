@@ -28,9 +28,22 @@ ARENA is vetted, so the flow is **apply → vet → approve → pay → access**
 
 Pricing lives in one place: the `TIERS` array in `src/components/public/apply-dialog.tsx`. Edit those numbers and the pricing cards, apply dialog, and payment step all update.
 
-## Session persistence
+## Persistence
 
-There is no backend. State is seeded from `src/lib/services/seed-data.ts` and persisted to `localStorage` under `empreinte_session_v1`, so an application you submit survives a refresh. **Reset demo data** in the sidebar user menu restores the seed.
+State is seeded from `src/lib/services/seed-data.ts` and persisted two ways:
+
+1. **Server-side**, through `/api/state` (GET/PUT/DELETE). The storage backend is resolved in `src/lib/server/store.ts` — set `KV_REST_API_URL` and `KV_REST_API_TOKEN` (Vercel KV / Upstash Redis) and the session persists across devices and deploys. With no store configured it falls back to process memory.
+2. **`localStorage`**, as an offline mirror, so the app still works with no backend at all.
+
+`SESSION_VERSION` in the data provider retires stale sessions, so shipped seed changes reach people who already have one saved. **Reset demo data** in the user menu clears both layers.
+
+To swap in Postgres or anything else, implement the `Store` interface in `src/lib/server/store.ts` — nothing else changes.
+
+## Payments
+
+Approving an application issues an invoice and a payment link (`/checkout?t=…`) — no card is ever collected during vetting. The checkout page is a working invoice with a simulated payment step; **no charge is made and no card details are taken**.
+
+To make it real, replace the `pay()` handler in `src/app/checkout/page.tsx` with a call to a server route that creates a Stripe Checkout Session, and have Stripe's webhook call `markInvoicePaid`. Pricing comes from the same `TIERS` constant the pricing page uses.
 
 ## The landing page
 
@@ -84,6 +97,14 @@ Roles are not just a nav filter; they change where you land and what exists.
 | **Member** | Member portal | Their own bookings, guest credits, and suite reservations |
 
 Switch roles from the user menu in the sidebar.
+
+## Alerts
+
+High-severity anomalies and door overrides raise an in-app toast while you work, wherever you are in the console. Slack relay channels are documented in the Inbox and activate with `SLACK_WEBHOOK_URL`.
+
+## Mobile
+
+The console is responsive: below `lg` the sidebar collapses into a hamburger drawer with a top bar carrying search and your account. The Door Console in particular is built to be usable on a tablet at the gate.
 
 ## Keyboard
 

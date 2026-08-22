@@ -92,7 +92,14 @@ export function GuidedTour() {
         }
     }, [user]);
 
-    const start = () => { setIndex(0); setOpen(true); };
+    const start = useCallback(() => { setIndex(0); setOpen(true); }, []);
+
+    // The user menu and mobile drawer can both summon the tour.
+    useEffect(() => {
+        const onOpen = () => start();
+        window.addEventListener('empreinte:open-tour', onOpen);
+        return () => window.removeEventListener('empreinte:open-tour', onOpen);
+    }, [start]);
     const close = useCallback(() => {
         setOpen(false);
         localStorage.setItem(SEEN_KEY, '1');
@@ -133,6 +140,7 @@ export function GuidedTour() {
 
     if (!user || user.role === 'Member') return null;
 
+    const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 1024;
     const cardTop = rect ? Math.min(Math.max(rect.top - 12, 16), (typeof window !== 'undefined' ? window.innerHeight : 800) - 280) : 120;
 
     return (
@@ -142,7 +150,7 @@ export function GuidedTour() {
                 <button
                     onClick={start}
                     aria-label="Open guided tour"
-                    className="fixed bottom-6 right-6 z-[90] group flex items-center gap-2 rounded-full border border-signal-cyan/30 bg-canvas-card/90 backdrop-blur px-4 py-2.5 text-signal-cyan shadow-lg shadow-signal-cyan/10 hover:bg-signal-cyan/10 transition-colors"
+                    className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-[90] group flex items-center gap-2 rounded-full border border-signal-cyan/30 bg-canvas-card/90 backdrop-blur px-4 py-2.5 text-signal-cyan shadow-lg shadow-signal-cyan/10 hover:bg-signal-cyan/10 transition-colors"
                 >
                     <span className="absolute inset-0 rounded-full border border-signal-cyan/40 animate-ping opacity-20 pointer-events-none" />
                     <Compass className="size-4" />
@@ -167,7 +175,7 @@ export function GuidedTour() {
                                 initial={false}
                                 animate={{ top: rect.top - 5, left: rect.left - 5, width: rect.width + 10, height: rect.height + 10 }}
                                 transition={{ type: 'spring', stiffness: 350, damping: 32 }}
-                                className="absolute rounded-lg border-2 border-signal-cyan shadow-[0_0_24px_rgba(45,212,191,0.35)] pointer-events-none"
+                                className="hidden lg:block absolute rounded-lg border-2 border-signal-cyan shadow-[0_0_24px_rgba(45,212,191,0.35)] pointer-events-none"
                             >
                                 <span className="absolute inset-0 rounded-lg border border-signal-cyan/50 animate-pulse" />
                             </motion.div>
@@ -178,8 +186,8 @@ export function GuidedTour() {
                             initial={{ opacity: 0, x: -12 }}
                             animate={{ opacity: 1, x: 0, top: cardTop }}
                             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                            className="absolute left-[280px] w-[380px] max-w-[calc(100vw-300px)] rounded-xl border border-border-muted bg-canvas-card/95 backdrop-blur-xl p-6 shadow-2xl"
-                            style={{ top: cardTop }}
+                            className="absolute left-1/2 -translate-x-1/2 bottom-4 w-[calc(100vw-2rem)] max-w-[420px] lg:left-[280px] lg:translate-x-0 lg:bottom-auto lg:w-[380px] lg:max-w-[calc(100vw-300px)] rounded-xl border border-border-muted bg-canvas-card/95 backdrop-blur-xl p-5 sm:p-6 shadow-2xl"
+                            style={isDesktop ? { top: cardTop } : undefined}
                         >
                             <div className="flex items-center justify-between mb-3">
                                 <span className="text-[10px] font-mono uppercase tracking-widest text-signal-cyan">

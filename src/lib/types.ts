@@ -139,3 +139,19 @@ export interface CheckInEvent {
     at: string;
     trustScore: number;
 }
+
+export type InvoiceStatus = 'Awaiting payment' | 'Paid' | 'Void';
+
+export interface Invoice {
+    id: string;
+    applicationId: string;
+    memberName: string;
+    email: string;
+    tier: MembershipTier;
+    amount: number;          // in whole dollars
+    cadence: string;
+    status: InvoiceStatus;
+    issuedAt: string;
+    paidAt?: string;
+    checkoutToken: string;   // stands in for a Stripe Checkout Session id
+}

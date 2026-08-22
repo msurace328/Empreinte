@@ -1,7 +1,7 @@
 import { Member, Application, AccessAnomaly, RevenueOpportunity, AuditEntry, Suite, Booking, Guest, MessageThread } from '../types';
 
 
-export const initialMembers: Member[] = [
+const baseMembers: Member[] = [
     {
         id: 'm-001',
         name: 'Kevin Balfe',
@@ -49,6 +49,32 @@ export const initialMembers: Member[] = [
         trustScore: 85,
     })),
 ];
+
+
+// A real circular-vouching ring: three accounts that vouch for each other in a
+// closed loop, with no outside referrer. This is what the graph engine detects.
+export const ringMembers: Member[] = [
+    {
+        id: 'm-101', name: 'Dorian Vale', email: 'd.vale@meridian-consult.co',
+        avatarUrl: '', tier: 'Associate', status: 'Watch',
+        joinDate: '2026-02-03T10:00:00Z', lastAccess: '2026-05-21T21:40:00Z',
+        trustScore: 38, referralId: 'm-103',
+    },
+    {
+        id: 'm-102', name: 'Sable Ruiz', email: 's.ruiz@meridian-consult.co',
+        avatarUrl: '', tier: 'Associate', status: 'Watch',
+        joinDate: '2026-02-05T10:00:00Z', lastAccess: '2026-05-20T20:05:00Z',
+        trustScore: 35, referralId: 'm-101',
+    },
+    {
+        id: 'm-103', name: 'Cassius Bright', email: 'c.bright@meridian-consult.co',
+        avatarUrl: '', tier: 'Associate', status: 'Watch',
+        joinDate: '2026-02-06T10:00:00Z', lastAccess: '2026-05-19T19:15:00Z',
+        trustScore: 41, referralId: 'm-102',
+    },
+];
+
+export const initialMembers: Member[] = [...baseMembers, ...ringMembers];
 
 export const initialApplications: Application[] = [
     {

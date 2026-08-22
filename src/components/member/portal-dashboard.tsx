@@ -24,12 +24,23 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
+import { GuestAndStanding } from './guest-and-standing';
+import { useData } from '@/lib/providers/data-provider';
 
 export function MemberPortalDashboard() {
     const { user, setRole } = useAuth();
+    const { guests } = useData();
     const [member, setMember] = useState<Member | null>(null);
     const [bookings, setBookings] = useState<Booking[]>([]);
     const [isBookingOpen, setIsBookingOpen] = useState(false);
+    const myGuests = guests.filter(g => g.sponsorId === user?.id);
+    // Season renewal lands on the anniversary of joining.
+    const renewal = React.useMemo(() => {
+        if (!member) return new Date();
+        const d = new Date(member.joinDate);
+        d.setFullYear(new Date().getFullYear() + 1);
+        return d;
+    }, [member]);
     const [newBooking, setNewBooking] = useState({
         suiteId: '',
         date: format(new Date(), 'yyyy-MM-dd'),
@@ -103,11 +114,17 @@ export function MemberPortalDashboard() {
                             <DropdownMenuContent align="end" className="glass border-border-muted w-56">
                                 <DropdownMenuLabel>Account</DropdownMenuLabel>
                                 <DropdownMenuSeparator className="bg-border-muted" />
-                                <DropdownMenuItem onClick={() => setRole('Admin')}>Switch to Backend</DropdownMenuItem>
-                                <DropdownMenuItem>Profile Settings</DropdownMenuItem>
-                                <DropdownMenuItem>Payment Methods</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => document.getElementById('member-standing')?.scrollIntoView({ behavior: 'smooth' })}>
+                                    Your standing &amp; guests
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => document.getElementById('member-billing')?.scrollIntoView({ behavior: 'smooth' })}>
+                                    Payments &amp; tier
+                                </DropdownMenuItem>
                                 <DropdownMenuSeparator className="bg-border-muted" />
-                                <DropdownMenuItem className="text-destructive"><LogOut className="mr-2 size-4" /> Logout</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => setRole('Admin')}>Switch to staff console</DropdownMenuItem>
+                                <DropdownMenuItem className="text-destructive" onClick={() => setRole('Admin')}>
+                                    <LogOut className="mr-2 size-4" /> Sign out
+                                </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
                     </div>
@@ -140,7 +157,11 @@ export function MemberPortalDashboard() {
                                 </div>
                                 <div>
                                     <p className="text-[10px] font-mono text-muted-foreground uppercase">Guest Credits</p>
-                                    <p className="text-sm font-bold">12 / 15</p>
+                                    <p className="text-sm font-bold">
+                                        {member.tier === 'Founder'
+                                            ? 'Unlimited'
+                                            : `${myGuests.filter(g => g.status !== 'Denied').length} / ${member.tier === 'Suite' ? 8 : 2}`}
+                                    </p>
                                 </div>
                                 <div>
                                     <p className="text-[10px] font-mono text-muted-foreground uppercase">Booking Limit</p>
@@ -148,7 +169,7 @@ export function MemberPortalDashboard() {
                                 </div>
                                 <div>
                                     <p className="text-[10px] font-mono text-muted-foreground uppercase">Renewal Date</p>
-                                    <p className="text-sm font-bold">Jan 15, 2027</p>
+                                    <p className="text-sm font-bold">{format(renewal, 'MMM d, yyyy')}</p>
                                 </div>
                             </div>
                         </CardContent>
@@ -252,8 +273,13 @@ export function MemberPortalDashboard() {
                     </Dialog>
                 </section>
 
+                {/* Guests + trust standing */}
+                <div id="member-standing">
+                    <GuestAndStanding member={member} />
+                </div>
+
                 {/* History & Upcoming */}
-                <section className="grid grid-cols-1 lg:grid-cols-3 gap-8 pb-20">
+                <section id="member-billing" className="grid grid-cols-1 lg:grid-cols-3 gap-8 pb-20">
                     <div className="lg:col-span-2 space-y-6">
                         <div className="flex items-center justify-between px-1">
                             <h2 className="text-sm font-mono uppercase tracking-widest text-muted-foreground flex items-center gap-2">

@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useData } from '@/lib/providers/data-provider';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -12,7 +13,7 @@ import { TrustGauge } from '@/components/ui/trust-gauge';
 import { SignalBreakdown } from '@/components/member/signal-breakdown';
 import { intelligenceService } from '@/lib/services/intelligence-service';
 import { Application, Member, AccessAnomaly, RiskSignal } from '@/lib/types';
-import { ShieldCheck, ShieldAlert, ChevronLeft, Fingerprint, Activity, History, CalendarDays, Clock } from 'lucide-react';
+import { ShieldCheck, ShieldAlert, ChevronLeft, Fingerprint, Activity, History, CalendarDays, Clock, SearchX } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/hooks/use-auth';
@@ -74,7 +75,29 @@ export default function MemberProfilePage() {
     }, [anomalies, liveAnomalies, id]);
     const auditTrail = useMemo(() => auditLog.filter(e => e.targetId === id), [auditLog, id]);
 
-    if (!profile) return <div className="p-8 font-mono">Loading dossier...</div>;
+    // No record for this id — say so plainly instead of spinning forever.
+    if (!profile) {
+        return (
+            <div className="max-w-lg mx-auto py-20 text-center animate-in fade-in duration-500">
+                <div className="size-14 rounded-full bg-signal-amber/10 border border-signal-amber/30 flex items-center justify-center mx-auto">
+                    <SearchX className="size-7 text-signal-amber" />
+                </div>
+                <h1 className="text-2xl font-bold tracking-tight mt-5">No dossier for this identity</h1>
+                <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
+                    Nothing on file under <span className="font-mono text-foreground">{id}</span>. It may have been
+                    removed, or the link points at a record that never existed.
+                </p>
+                <div className="flex gap-2 justify-center mt-6">
+                    <Button variant="outline" onClick={() => router.back()}>
+                        <ChevronLeft className="mr-2 size-4" /> Back
+                    </Button>
+                    <Button asChild className="bg-signal-cyan text-canvas-black hover:bg-signal-cyan/90">
+                        <Link href="/admin/members">Open the roster</Link>
+                    </Button>
+                </div>
+            </div>
+        );
+    }
 
     const score = isApp ? 100 - (application as Application).riskScore : (member as Member).trustScore;
     const negatives = (signals ?? []).filter(s => s.impact === 'Negative').length;

@@ -17,7 +17,8 @@ import Link from 'next/link';
 import { useAuth } from '@/hooks/use-auth';
 
 export default function ApplicationsPage() {
-    const { applications, approveApplication, rejectApplication, waitlistApplication, requestInfoApplication } = useData();
+    const { applications, approveApplication, rejectApplication, waitlistApplication, requestInfoApplication, issueInvoice, invoices } = useData();
+    const [issued, setIssued] = useState<{ id: string; name: string; amount: number; token: string } | null>(null);
     const apps = applications.filter(a => !['Approved', 'Rejected'].includes(a.status));
     
     const [selectedApp, setSelectedApp] = useState<Application | null>(null);
@@ -38,7 +39,12 @@ export default function ApplicationsPage() {
         if (!selectedApp || !currentAction || !user) return;
         const op = `${user.role}.${user.name.split(' ')[1] || user.name}`;
         
-        if (currentAction === 'Approved') approveApplication(selectedApp.id, op, reason);
+        if (currentAction === 'Approved') {
+            approveApplication(selectedApp.id, op, reason);
+            // Vetting cleared — now, and only now, we ask for payment.
+            const inv = issueInvoice({ applicationId: selectedApp.id, operator: op });
+            if (inv) setIssued({ id: inv.id, name: inv.memberName, amount: inv.amount, token: inv.checkoutToken });
+        }
         else if (currentAction === 'Rejected') rejectApplication(selectedApp.id, op, reason);
         else if (currentAction === 'Waitlisted') waitlistApplication(selectedApp.id, op, reason);
         else if (currentAction === 'NeedsInfo') requestInfoApplication(selectedApp.id, op, reason);
@@ -55,12 +61,39 @@ export default function ApplicationsPage() {
                     <h1 className="text-3xl font-bold tracking-tight">Review Queue</h1>
                     <p className="text-muted-foreground mt-1">Vetting pending applications for ARENA membership.</p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 items-center">
+                    {invoices.filter(i => i.status === 'Awaiting payment').length > 0 && (
+                        <Badge variant="outline" className="font-mono text-[10px] py-1 px-3 bg-signal-amber/5 text-signal-amber border-signal-amber/20">
+                            {invoices.filter(i => i.status === 'Awaiting payment').length} AWAITING PAYMENT
+                        </Badge>
+                    )}
                     <Badge variant="outline" className="font-mono text-[10px] py-1 px-3 bg-signal-cyan/5 text-signal-cyan border-signal-cyan/20">
                         {apps.length} PENDING
                     </Badge>
                 </div>
             </div>
+
+            {issued && (
+                <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/[0.07] p-4 flex items-start justify-between gap-4 flex-wrap animate-in fade-in slide-in-from-top-2">
+                    <div className="min-w-0">
+                        <p className="text-sm font-medium text-emerald-400">
+                            {issued.name} approved · payment link issued for ${issued.amount.toLocaleString()}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                            No card was taken during vetting. Send them this link to complete membership.
+                        </p>
+                        <code className="text-[10px] font-mono text-muted-foreground/80 mt-2 block truncate">
+                            /checkout?t={issued.token}
+                        </code>
+                    </div>
+                    <div className="flex gap-2 shrink-0">
+                        <Button asChild size="sm" className="bg-signal-cyan text-canvas-black hover:bg-signal-cyan/90">
+                            <Link href={`/checkout?t=${issued.token}`} target="_blank">Open link</Link>
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={() => setIssued(null)} className="text-muted-foreground">Dismiss</Button>
+                    </div>
+                </div>
+            )}
 
             <Card className="glass border-border-muted overflow-hidden">
                 <Table>
