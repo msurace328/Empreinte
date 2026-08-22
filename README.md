@@ -1,36 +1,62 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Empreinte
 
-## Getting Started
+**Precision trust operating layer for premium membership operations.**
 
-First, run the development server:
+Empreinte vets members, governs who gets through the door, logs every decision in an immutable trail, and surfaces the revenue your suites are leaving on the table. Built for ARENA's premium suite membership operation.
+
+![Next.js](https://img.shields.io/badge/Next.js-16-black) ![React](https://img.shields.io/badge/React-19-blue) ![Tailwind](https://img.shields.io/badge/Tailwind-4-38bdf8)
+
+## What's inside
+
+| Module | Route | What it does |
+| --- | --- | --- |
+| **Command Center** | `/admin` | Trust-health index, live anomaly feed, KPIs at a glance |
+| **Review Queue** | `/admin/applications` | Applicant vetting with risk scoring — approve, waitlist, request info, reject |
+| **Members** | `/admin/members` | Roster with per-member dossiers: identity intelligence, anomalies, bookings, audit trail |
+| **Access & Guests** | `/admin/access` | Live credential posture, guest vetting, watchlist / restrict / reinstate |
+| **Suites & Game-Day** | `/admin/suites` | Suite inventory, occupancy, fixture schedule with guest lists |
+| **Member Graph** | `/admin/graph` | Trust & referral topology — flags circular-vouching rings |
+| **Revenue Intel** | `/admin/revenue` | Revenue gaps computed from live data, plus optional Claude-powered analysis |
+| **Audit Log** | `/admin/audit` | Hash-chained, append-only record of every operator decision |
+| **Security** | `/admin/settings` | Role-based access control and security posture |
+
+The landing page (`/`) doubles as the member portal: switch the demo role to **Member** and it becomes a self-service dashboard with suite booking.
+
+## The intelligence layer
+
+`src/lib/services/intelligence-service.ts` powers identity vetting:
+
+- **Identity signals** — device fingerprints, network topology, duplicate-document detection
+- **Image forensics** — synthetic-face (StyleGAN) scoring, reverse-image matching
+- **Access anomalies** — concurrent-use, off-hours, guest spikes, credential sharing
+- **Graph analysis** — circular vouching / manufactured-trust rings
+
+Every signal carries confidence, impact, reasoning, and provenance, and renders in the member dossier.
+
+## Getting started
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000). All data is seeded in-memory (`src/lib/services/seed-data.ts`) — no database required. Actions (restrict, approve, vet) mutate live state and write to the audit log for the session.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Optional: live AI revenue analysis
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+The **Run live AI analysis** button on `/admin/revenue` calls Claude to surface non-obvious revenue opportunities from the operating data.
 
-## Learn More
+```bash
+cp .env.example .env.local
+# then add your Anthropic API key to .env.local
+```
 
-To learn more about Next.js, take a look at the following resources:
+Without the key everything else works; the button surfaces a clear error instead.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Roles
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+The demo auth (`src/hooks/use-auth.tsx`) supports five roles with scoped navigation: **Admin**, **Membership Director**, **Front Desk**, **Auditor**, and **Member**. Switch roles from the user menu in the sidebar.
 
-## Deploy on Vercel
+## Stack
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Next.js 16 (App Router, Turbopack) · React 19 · Tailwind 4 · Radix UI · Recharts · react-force-graph · Framer Motion

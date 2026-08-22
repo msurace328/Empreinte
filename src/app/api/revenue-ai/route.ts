@@ -6,7 +6,7 @@ export const runtime = 'nodejs';
 export async function POST(req: NextRequest) {
     const apiKey = process.env.ANTHROPIC_API_KEY;
     if (!apiKey) {
-        return NextResponse.json({ error: 'ANTHROPIC_API_KEY is not set in the environment.' }, { status: 500 });
+        return NextResponse.json({ error: 'ANTHROPIC_API_KEY is not set. Add it to .env.local (see .env.example) and restart the dev server.' }, { status: 500 });
     }
 
     try {
@@ -32,7 +32,7 @@ Return ONLY a JSON array (no prose, no markdown code fences) of exactly 3 object
                 'content-type': 'application/json',
             },
             body: JSON.stringify({
-                model: 'claude-sonnet-4-6',
+                model: 'claude-sonnet-5',
                 max_tokens: 1024,
                 messages: [{ role: 'user', content: prompt }],
             }),
