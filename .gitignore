@@ -42,3 +42,6 @@ next-env.d.ts
 
 # keep the env template in the repo
 !.env.example
+
+# Upstash/Vercel KV credentials pulled by `vercel integration add`
+.env.local

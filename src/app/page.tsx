@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useAuth } from '@/hooks/use-auth';
 import { MemberPortalDashboard } from '@/components/member/portal-dashboard';
 import { ApplyDialog, TIERS, money } from '@/components/public/apply-dialog';
+import { CoverGate } from '@/components/public/cover-gate';
 import { MembershipTier } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import {
@@ -92,6 +93,7 @@ export default function Home() {
     }
 
     return (
+        <CoverGate>
         <main className="relative min-h-screen bg-canvas-black text-foreground overflow-hidden">
             <div
                 className="pointer-events-none absolute inset-0"
@@ -225,5 +227,6 @@ export default function Home() {
 
             <ApplyDialog open={applyOpen} onOpenChange={setApplyOpen} initialTier={applyTier} />
         </main>
+        </CoverGate>
     );
 }
