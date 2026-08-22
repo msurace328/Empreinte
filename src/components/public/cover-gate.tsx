@@ -42,11 +42,10 @@ export function CoverGate({ children }: { children: React.ReactNode }) {
         setActive(!sessionStorage.getItem(SEEN_KEY));
     }, []);
 
-    // Preload the clips so nothing stutters at contact.
-    useEffect(() => {
-        if (!active) return;
+    // Audio is deliberately not preloaded — see the preload="none" note below.
+    const primeAudio = useCallback(() => {
         [crackRef, roarRef, ambienceRef].forEach(r => r.current?.load());
-    }, [active]);
+    }, []);
 
     const stopAll = useCallback(() => {
         [crackRef, roarRef, ambienceRef].forEach(r => {
@@ -76,6 +75,7 @@ export function CoverGate({ children }: { children: React.ReactNode }) {
         if (phase !== 'idle') return;   // already running — never restart mid-swing
         setPhase('swinging');
         setHolding(true);
+        primeAudio();
 
         const v = videoRef.current;
         if (v) {
@@ -100,7 +100,7 @@ export function CoverGate({ children }: { children: React.ReactNode }) {
         }, LEAD_IN * 1000));
 
         timers.current.push(setTimeout(() => { setHolding(false); finish(); }, HOLD_MS));
-    }, [phase, muted, finish]);
+    }, [phase, muted, finish, primeAudio]);
 
 
 
@@ -138,16 +138,22 @@ export function CoverGate({ children }: { children: React.ReactNode }) {
                         )}
                     >
                         <video
-                            ref={videoRef}
                             src="/media/swing.mp4"
                             poster="/media/swing-poster.jpg"
                             autoPlay
                             loop
                             muted
                             playsInline
-                            preload="auto"
-                            onCanPlay={() => setReady(true)}
-                            onLoadedMetadata={(e) => { e.currentTarget.muted = true; }}
+                            preload="metadata"
+                            disableRemotePlayback
+                            // React sets `muted` as a property; Safari needs the attribute
+                            // present or it refuses to autoplay and can stall the load.
+                            ref={(el) => {
+                                videoRef.current = el;
+                                if (el && !el.hasAttribute('muted')) el.setAttribute('muted', '');
+                            }}
+                            onLoadedMetadata={() => setReady(true)}
+                            onError={() => setReady(true)}
                             className={cn(
                                 'absolute inset-0 w-full h-full object-cover transition-transform duration-[2200ms] ease-out',
                                 phase === 'idle' ? 'scale-[1.06]' : 'scale-100'
@@ -155,9 +161,9 @@ export function CoverGate({ children }: { children: React.ReactNode }) {
                         />
 
                         {/* Audio, held until the gesture unlocks it */}
-                        <audio ref={crackRef} src="/media/crack.mp3" preload="auto" />
-                        <audio ref={roarRef} src="/media/roar.mp3" preload="auto" />
-                        <audio ref={ambienceRef} src="/media/ambience.mp3" preload="auto" />
+                        <audio ref={crackRef} src="/media/crack.mp3" preload="none" />
+                        <audio ref={roarRef} src="/media/roar.mp3" preload="none" />
+                        <audio ref={ambienceRef} src="/media/ambience.mp3" preload="none" />
 
                         {/* Grade the footage toward the brand and keep text legible */}
                         <div className="absolute inset-0 bg-[#05070C]/45" />
