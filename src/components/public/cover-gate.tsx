@@ -26,8 +26,11 @@ export function CoverGate({ children }: { children: React.ReactNode }) {
     const [phase, setPhase] = useState<Phase>('idle');
     const [holding, setHolding] = useState(false);
     const [muted, setMuted] = useState(false);
-    const [ready, setReady] = useState(false);
     const [leaving, setLeaving] = useState(false);
+    // Safari terminates the page process on the landing route when a <video>
+    // is part of the first render. The poster carries the cover instead, and
+    // the video element is only mounted once the visitor asks for the swing.
+    const [showVideo, setShowVideo] = useState(false);
 
     const videoRef = useRef<HTMLVideoElement | null>(null);
     const crackRef = useRef<HTMLAudioElement | null>(null);
@@ -46,6 +49,14 @@ export function CoverGate({ children }: { children: React.ReactNode }) {
     const primeAudio = useCallback(() => {
         [crackRef, roarRef, ambienceRef].forEach(r => r.current?.load());
     }, []);
+
+    // Warm the video bytes in the HTTP cache without attaching a decoder, so
+    // the swing starts instantly when the element does mount.
+    useEffect(() => {
+        if (!active) return;
+        const t = setTimeout(() => { void fetch('/media/swing.mp4').catch(() => {}); }, 1200);
+        return () => clearTimeout(t);
+    }, [active]);
 
     const stopAll = useCallback(() => {
         [crackRef, roarRef, ambienceRef].forEach(r => {
@@ -75,6 +86,7 @@ export function CoverGate({ children }: { children: React.ReactNode }) {
         if (phase !== 'idle') return;   // already running — never restart mid-swing
         setPhase('swinging');
         setHolding(true);
+        setShowVideo(true);
         primeAudio();
 
         const v = videoRef.current;
@@ -137,28 +149,32 @@ export function CoverGate({ children }: { children: React.ReactNode }) {
                             leaving ? 'opacity-0 scale-[1.05] pointer-events-none' : 'opacity-100 scale-100'
                         )}
                     >
-                        <video
-                            src="/media/swing.mp4"
-                            poster="/media/swing-poster.jpg"
-                            autoPlay
-                            loop
-                            muted
-                            playsInline
-                            preload="metadata"
-                            disableRemotePlayback
-                            // React sets `muted` as a property; Safari needs the attribute
-                            // present or it refuses to autoplay and can stall the load.
-                            ref={(el) => {
-                                videoRef.current = el;
-                                if (el && !el.hasAttribute('muted')) el.setAttribute('muted', '');
-                            }}
-                            onLoadedMetadata={() => setReady(true)}
-                            onError={() => setReady(true)}
+                        <img
+                            src="/media/swing-poster.jpg"
+                            alt=""
                             className={cn(
                                 'absolute inset-0 w-full h-full object-cover transition-transform duration-[2200ms] ease-out',
                                 phase === 'idle' ? 'scale-[1.06]' : 'scale-100'
                             )}
                         />
+
+                        {showVideo && (
+                            <video
+                                src="/media/swing.mp4"
+                                poster="/media/swing-poster.jpg"
+                                autoPlay
+                                loop
+                                muted
+                                playsInline
+                                preload="auto"
+                                disableRemotePlayback
+                                ref={(el) => {
+                                    videoRef.current = el;
+                                    if (el && !el.hasAttribute('muted')) el.setAttribute('muted', '');
+                                }}
+                                className="absolute inset-0 w-full h-full object-cover"
+                            />
+                        )}
 
                         {/* Audio, held until the gesture unlocks it */}
                         <audio ref={crackRef} src="/media/crack.mp3" preload="none" />
@@ -222,7 +238,7 @@ export function CoverGate({ children }: { children: React.ReactNode }) {
                                     onPointerDown={beginHold}
                                     onClick={beginHold}
                                     onContextMenu={(e) => e.preventDefault()}
-                                    disabled={phase === 'granted' || !ready}
+                                    disabled={phase === 'granted'}
                                     aria-label="Touch to verify and enter"
                                     className={cn(
                                         'relative size-24 sm:size-28 rounded-2xl border backdrop-blur-sm flex items-center justify-center transition-all touch-none select-none',
@@ -230,7 +246,7 @@ export function CoverGate({ children }: { children: React.ReactNode }) {
                                         phase === 'granted'
                                             ? 'border-signal-cyan/70 bg-signal-cyan/15'
                                             : 'border-white/20 bg-white/[0.06] hover:border-signal-cyan/50 hover:bg-white/[0.1]',
-                                        !ready && 'opacity-40'
+
                                     )}
                                 >
                                     <svg viewBox="0 0 64 64" className="size-12 sm:size-14">
@@ -261,9 +277,9 @@ export function CoverGate({ children }: { children: React.ReactNode }) {
 
                                 <p className={cn('mt-5 text-[10px] font-mono uppercase tracking-[0.3em] transition-colors',
                                     phase === 'granted' ? 'text-signal-cyan' : 'text-white/50')}>
-                                    {phase === 'granted' ? '✓ Access granted' : holding ? 'Verifying…' : ready ? 'Touch to enter' : 'Loading…'}
+                                    {phase === 'granted' ? '✓ Access granted' : holding ? 'Verifying…' : 'Touch to enter'}
                                 </p>
-                                {phase !== 'granted' && ready && (
+                                {phase !== 'granted' && (
                                     <p className="mt-2 text-[10px] text-white/30">or press enter</p>
                                 )}
                             </div>
