@@ -1,8 +1,8 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { Member, Application, RiskSignal, AccessAnomaly, RevenueOpportunity, AuditEntry, Booking, Guest, MessageThread, CheckInEvent, CheckInResult, Invoice } from '@/lib/types';
-import { initialMembers, initialApplications, initialOpportunities, initialAnomalies, initialAuditLog, initialBookings, initialSuites, initialGuests, initialThreads } from '@/lib/services/seed-data';
+import { Member, Application, RiskSignal, AccessAnomaly, RevenueOpportunity, AuditEntry, Booking, Guest, MessageThread, CheckInEvent, CheckInResult, Invoice, Expense } from '@/lib/types';
+import { initialMembers, initialApplications, initialOpportunities, initialAnomalies, initialAuditLog, initialBookings, initialSuites, initialGuests, initialThreads, initialExpenses } from '@/lib/services/seed-data';
 
 interface DataContextType {
     members: Member[];
@@ -15,6 +15,7 @@ interface DataContextType {
     threads: MessageThread[];
     checkIns: CheckInEvent[];
     invoices: Invoice[];
+    expenses: Expense[];
 
     // Actions
     approveApplication: (appId: string, operator: string, reason: string) => void;
@@ -40,6 +41,7 @@ interface DataContextType {
     sponsorGuest: (input: { name: string; sponsorId: string; sponsorName: string }) => Guest;
     issueInvoice: (input: { applicationId: string; operator: string }) => Invoice | null;
     markInvoicePaid: (invoiceId: string) => Invoice | null;
+    addExpense: (input: Omit<Expense, 'id'>, operator: string) => Expense;
     recordCheckIn: (input: {
         subjectId: string; subjectKind: 'Member' | 'Guest'; result: CheckInResult;
         reason: string; gate: string; operator: string;
@@ -79,6 +81,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     const [threads, setThreads] = useState<MessageThread[]>(initialThreads);
     const [checkIns, setCheckIns] = useState<CheckInEvent[]>([]);
     const [invoices, setInvoices] = useState<Invoice[]>([]);
+    const [expenses, setExpenses] = useState<Expense[]>(initialExpenses);
     const [hydrated, setHydrated] = useState(false);
     const [backend, setBackend] = useState<'kv' | 'memory' | 'unavailable'>('unavailable');
 
@@ -100,6 +103,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
             if (snap.threads) setThreads(snap.threads as MessageThread[]);
             if (snap.checkIns) setCheckIns(snap.checkIns as CheckInEvent[]);
             if (snap.invoices) setInvoices(snap.invoices as Invoice[]);
+            if (snap.expenses) setExpenses(snap.expenses as Expense[]);
             return true;
         };
 
@@ -132,7 +136,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
     useEffect(() => {
         if (!hydrated) return;
-        const snapshot = { version: SESSION_VERSION, members, applications, opportunities, anomalies, auditLog, guests, threads, checkIns, invoices };
+        const snapshot = { version: SESSION_VERSION, members, applications, opportunities, anomalies, auditLog, guests, threads, checkIns, invoices, expenses };
         try {
             localStorage.setItem(STORE_KEY, JSON.stringify(snapshot));
         } catch {
@@ -147,7 +151,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
             }).catch(() => { /* offline is fine; the local mirror still holds */ });
         }, 700);
         return () => clearTimeout(t);
-    }, [hydrated, members, applications, opportunities, anomalies, auditLog, guests, threads, checkIns, invoices]);
+    }, [hydrated, members, applications, opportunities, anomalies, auditLog, guests, threads, checkIns, invoices, expenses]);
 
     const resetDemoData = () => {
         try { localStorage.removeItem(STORE_KEY); } catch {}
@@ -161,6 +165,14 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         setThreads(initialThreads);
         setCheckIns([]);
         setInvoices([]);
+        setExpenses(initialExpenses);
+    };
+
+    const addExpense: DataContextType['addExpense'] = (input, operator) => {
+        const expense: Expense = { ...input, id: `ex-${String(Date.now()).slice(-6)}` };
+        setExpenses(prev => [expense, ...prev]);
+        addAuditEntry(operator, 'EXPENSE_RECORDED', expense.id, `${expense.vendor} · $${expense.amount.toLocaleString()} · ${expense.category}.`);
+        return expense;
     };
 
     // Vetting cleared, so now we ask for money — never before. The checkout
@@ -399,7 +411,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
             approveApplication, rejectApplication, waitlistApplication, requestInfoApplication,
             restrictMember, watchMember, reinstateMember, approveOpportunity, dismissOpportunity,
             dismissAnomaly, addMember, issueGuestPass, denyGuest, addAuditEntry,
-            addApplication, replyToThread, markThreadRead, resetDemoData, recordCheckIn, backend, hydrated, sponsorGuest, invoices, issueInvoice, markInvoicePaid
+            addApplication, replyToThread, markThreadRead, resetDemoData, recordCheckIn, backend, hydrated, sponsorGuest, invoices, issueInvoice, markInvoicePaid, expenses, addExpense
         }}>
             {children}
         </DataContext.Provider>

@@ -1,4 +1,4 @@
-import { Member, Application, AccessAnomaly, RevenueOpportunity, AuditEntry, Suite, Booking, Guest, MessageThread } from '../types';
+import { Member, Application, AccessAnomaly, RevenueOpportunity, AuditEntry, Suite, Booking, Guest, MessageThread, Expense } from '../types';
 
 
 const baseMembers: Member[] = [
@@ -279,4 +279,27 @@ export const initialThreads: MessageThread[] = [
             { id: 'msg-006', from: 'member', authorName: 'Empreinte Sentinel', body: 'Overnight summary: 2 access anomalies flagged (1 high severity), 3 applications awaiting review, 1 guest pass issued. Trust-Health Index steady at 96.4%.', at: '2026-05-25T06:00:00Z' },
         ],
     },
+];
+
+// A season's worth of operating costs for a premium suite business. Amounts are
+// illustrative; categories and deductible rates follow common US treatment.
+export const initialExpenses: Expense[] = [
+    { id: 'ex-001', date: '2026-01-08T00:00:00Z', vendor: 'Northside Facilities LLC', description: 'Suite level lease — Q1', amount: 148000, category: 'Rent & Facilities', deductibleRate: 1, receipt: true, method: 'ACH' },
+    { id: 'ex-002', date: '2026-01-15T00:00:00Z', vendor: 'Commonwealth Power', description: 'Utilities — January', amount: 9840, category: 'Utilities', deductibleRate: 1, receipt: true, method: 'ACH' },
+    { id: 'ex-003', date: '2026-01-31T00:00:00Z', vendor: 'Payroll — hospitality staff', description: 'Suite hosts, front desk, security (12 FTE)', amount: 212400, category: 'Payroll & Contractors', deductibleRate: 1, receipt: true, method: 'ACH' },
+    { id: 'ex-004', date: '2026-02-03T00:00:00Z', vendor: 'Harborline Catering', description: 'In-suite catering — Jan fixtures', amount: 68200, category: 'Food & Beverage', deductibleRate: 0.5, reviewNote: 'Client-entertainment meals are commonly limited to 50%. Confirm which portion is staff meals — treatment differs.', receipt: true, method: 'Card' },
+    { id: 'ex-005', date: '2026-02-10T00:00:00Z', vendor: 'Meridian Risk', description: 'General liability & liquor liability premium', amount: 44500, category: 'Insurance', deductibleRate: 1, receipt: true, method: 'ACH' },
+    { id: 'ex-006', date: '2026-02-14T00:00:00Z', vendor: 'Empreinte Platform', description: 'Trust & access platform — annual', amount: 36000, category: 'Software & Technology', deductibleRate: 1, receipt: true, method: 'Card' },
+    { id: 'ex-007', date: '2026-02-22T00:00:00Z', vendor: 'Sable & Roe LLP', description: 'Membership agreement redraft', amount: 18750, category: 'Professional Services', deductibleRate: 1, receipt: true, method: 'Check' },
+    { id: 'ex-008', date: '2026-03-02T00:00:00Z', vendor: 'Vantage Displays', description: 'Suite AV refresh — 3 suites', amount: 92000, category: 'Equipment & Depreciation', deductibleRate: 1, reviewNote: 'Capital purchase. May qualify for first-year expensing rather than multi-year depreciation — ask your accountant which is better for this year.', receipt: true, method: 'ACH' },
+    { id: 'ex-009', date: '2026-03-11T00:00:00Z', vendor: 'Fieldhouse Media', description: 'Season campaign — digital & print', amount: 54300, category: 'Marketing & Advertising', deductibleRate: 1, receipt: true, method: 'Card' },
+    { id: 'ex-010', date: '2026-03-18T00:00:00Z', vendor: 'Stripe', description: 'Card processing fees — Q1', amount: 27900, category: 'Merchant & Bank Fees', deductibleRate: 1, receipt: true, method: 'Card' },
+    { id: 'ex-011', date: '2026-04-01T00:00:00Z', vendor: 'Northside Facilities LLC', description: 'Suite level lease — Q2', amount: 148000, category: 'Rent & Facilities', deductibleRate: 1, receipt: true, method: 'ACH' },
+    { id: 'ex-012', date: '2026-04-09T00:00:00Z', vendor: 'Sentinel Screening', description: 'Member background checks — 240 runs', amount: 14400, category: 'Security & Compliance', deductibleRate: 1, receipt: true, method: 'Card' },
+    { id: 'ex-013', date: '2026-04-21T00:00:00Z', vendor: 'Harborline Catering', description: 'In-suite catering — Mar/Apr fixtures', amount: 81600, category: 'Food & Beverage', deductibleRate: 0.5, reviewNote: 'Same 50% question as the January invoice.', receipt: true, method: 'Card' },
+    { id: 'ex-014', date: '2026-04-30T00:00:00Z', vendor: 'Payroll — hospitality staff', description: 'Suite hosts, front desk, security (12 FTE)', amount: 218900, category: 'Payroll & Contractors', deductibleRate: 1, receipt: true, method: 'ACH' },
+    { id: 'ex-015', date: '2026-05-06T00:00:00Z', vendor: 'Anonymous — cash', description: 'Game-day supplies, unreceipted', amount: 3150, category: 'Other', deductibleRate: 1, reviewNote: 'No receipt on file. Unsubstantiated cash spend is the first thing an examiner pulls — attach documentation or drop the deduction.', receipt: false, method: 'Cash' },
+    { id: 'ex-016', date: '2026-05-12T00:00:00Z', vendor: 'Commonwealth Power', description: 'Utilities — Feb through May', amount: 38600, category: 'Utilities', deductibleRate: 1, receipt: true, method: 'ACH' },
+    { id: 'ex-017', date: '2026-05-19T00:00:00Z', vendor: 'Delta / lodging', description: 'League ops conference — 2 staff', amount: 8900, category: 'Travel', deductibleRate: 1, receipt: true, method: 'Card' },
+    { id: 'ex-018', date: '2026-05-24T00:00:00Z', vendor: 'Rivera Bookkeeping', description: 'Monthly close & reconciliation', amount: 9600, category: 'Professional Services', deductibleRate: 1, receipt: true, method: 'ACH' },
 ];

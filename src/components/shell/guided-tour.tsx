@@ -55,6 +55,10 @@ const STEPS: TourStep[] = [
         body: 'The money you are leaving on the table. Gaps computed live from booking, suite, and member data, plus an on-demand Claude analysis. Scroll to the bottom for the Moonshot Vault — four unconventional plays modeled on assets you already own, visible to the founder seat only.',
     },
     {
+        anchor: '/admin/books', route: '/admin/books', title: 'Books & Tax', roles: ['Admin'],
+        body: 'Everything the accountant asks for, already sorted. Revenue and spend land here categorised, the P&L builds itself, and lines needing a judgement call are flagged with the actual question to ask. One button exports the whole pack as CSV. It organises your records — it does not file or give tax advice.',
+    },
+    {
         anchor: '/admin/audit', route: '/admin/audit', title: 'Audit Log', roles: ['Admin', 'Auditor'],
         body: 'The immutable record. Every restrict, approve, revoke, and revenue decision — hash-chained and append-only. This is the trail your insurer, your lawyers, and your members will ask for.',
     },

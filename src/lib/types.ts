@@ -155,3 +155,39 @@ export interface Invoice {
     paidAt?: string;
     checkoutToken: string;   // stands in for a Stripe Checkout Session id
 }
+
+/**
+ * Bookkeeping. Categories mirror the expense lines a US business return
+ * generally asks for, so the ledger exports in a shape an accountant expects.
+ */
+export type ExpenseCategory =
+    | 'Payroll & Contractors'
+    | 'Rent & Facilities'
+    | 'Utilities'
+    | 'Insurance'
+    | 'Food & Beverage'
+    | 'Marketing & Advertising'
+    | 'Software & Technology'
+    | 'Professional Services'
+    | 'Equipment & Depreciation'
+    | 'Travel'
+    | 'Merchant & Bank Fees'
+    | 'Security & Compliance'
+    | 'Other';
+
+export type RevenueStream = 'Membership dues' | 'Suite bookings' | 'Guest passes' | 'Food & beverage';
+
+export interface Expense {
+    id: string;
+    date: string;
+    vendor: string;
+    description: string;
+    amount: number;
+    category: ExpenseCategory;
+    /** Portion generally deductible for this category, 0–1. Meals are commonly limited. */
+    deductibleRate: number;
+    /** Set when the line needs a human decision before filing. */
+    reviewNote?: string;
+    receipt: boolean;
+    method: 'Card' | 'ACH' | 'Check' | 'Cash';
+}

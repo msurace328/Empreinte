@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import {
-    Search, LayoutDashboard, DoorOpen, UserPlus, Users, Inbox, Lock, Ticket,
+    Search, LayoutDashboard, DoorOpen, UserPlus, Users, Inbox, Lock, Ticket, Calculator,
     Network, DollarSign, History, ShieldAlert, CornerDownLeft,
 } from 'lucide-react';
 
@@ -35,6 +35,7 @@ const PAGES: Item[] = [
     { id: 'p-suites', label: 'Suites & Game-Day', href: '/admin/suites', icon: Ticket, group: 'Go to', roles: ALL },
     { id: 'p-graph', label: 'Member Graph', href: '/admin/graph', icon: Network, group: 'Go to', roles: ['Admin', 'MembershipDirector', 'Auditor'] },
     { id: 'p-rev', label: 'Revenue Intel', href: '/admin/revenue', icon: DollarSign, group: 'Go to', roles: ['Admin', 'MembershipDirector'] },
+    { id: 'p-books', label: 'Books & Tax', href: '/admin/books', icon: Calculator, group: 'Go to', roles: ['Admin'] },
     { id: 'p-audit', label: 'Audit Log', href: '/admin/audit', icon: History, group: 'Go to', roles: ['Admin', 'Auditor'] },
     { id: 'p-sec', label: 'Security', href: '/admin/settings', icon: ShieldAlert, group: 'Go to', roles: ['Admin'] },
 ];

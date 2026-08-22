@@ -19,6 +19,7 @@ Empreinte vets members, governs who gets through the door, logs every decision i
 | **Suites & Game-Day** | `/admin/suites` | Suite inventory, occupancy, fixture schedule with guest lists |
 | **Member Graph** | `/admin/graph` | Trust & referral topology — flags circular-vouching rings |
 | **Revenue Intel** | `/admin/revenue` | Revenue gaps from live data, Claude-powered analysis, and the founder-only Moonshot Vault |
+| **Books & Tax** | `/admin/books` | P&L, categorised expense ledger, review flags, quarterly view, accountant CSV pack |
 | **Audit Log** | `/admin/audit` | Hash-chained, append-only record of every operator decision |
 | **Security** | `/admin/settings` | Role-based access control and security posture |
 
@@ -27,6 +28,18 @@ Empreinte vets members, governs who gets through the door, logs every decision i
 ARENA is vetted, so the flow is **apply → vet → approve → pay → access**: no card is collected until identity review clears. The landing page carries the tier pricing and a live application form — submissions are risk-scored on arrival (disposable-email detection, referral provenance) and land straight in the Review Queue, audited as `APPLICATION_RECEIVED`.
 
 Pricing lives in one place: the `TIERS` array in `src/components/public/apply-dialog.tsx`. Edit those numbers and the pricing cards, apply dialog, and payment step all update.
+
+## Books & Tax
+
+`/admin/books` keeps the year in order so tax time is a handover, not a scramble:
+
+- **P&L** built from live data — dues by tier, suite bookings, guest passes, against expenses grouped into the categories a business return asks for.
+- **Ledger** where every line carries a category, a deductible rate, a payment method, and whether a receipt is on file.
+- **Needs review** surfaces lines whose treatment is a judgement call (meals limited to 50%, capital purchases that might qualify for first-year expensing, anything unreceipted) with the actual question to put to your accountant.
+- **Quarterly** view with a suggested set-aside and the usual estimated-payment dates.
+- **Accountant pack** exports the P&L and the full ledger as CSV.
+
+**This organises records; it does not file returns or give tax advice.** Deductible rates are common defaults, and the set-aside is a flat placeholder — real liability depends on entity type, state, credits, and prior-year positions. Everything here is built to hand to a licensed professional, not to replace one.
 
 ## Persistence
 

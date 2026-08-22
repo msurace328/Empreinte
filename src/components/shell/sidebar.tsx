@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
+    Calculator,
     DoorOpen,
     Inbox,
     LayoutDashboard,
@@ -52,6 +53,7 @@ const navItems: NavItem[] = [
     { title: 'Suites & Game-Day', href: '/admin/suites', icon: Ticket, roles: ['Admin', 'MembershipDirector', 'FrontDesk', 'Auditor'] },
     { title: 'Member Graph', href: '/admin/graph', icon: Network, roles: ['Admin', 'MembershipDirector', 'Auditor'] },
     { title: 'Revenue Intel', href: '/admin/revenue', icon: DollarSign, roles: ['Admin', 'MembershipDirector'] },
+    { title: 'Books & Tax', href: '/admin/books', icon: Calculator, roles: ['Admin'] },
     { title: 'Audit Log', href: '/admin/audit', icon: History, roles: ['Admin', 'Auditor'] },
     { title: 'Security', href: '/admin/settings', icon: ShieldAlert, roles: ['Admin'] },
 ];
