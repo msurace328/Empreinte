@@ -103,3 +103,22 @@ export interface Guest {
         backgroundClear: boolean;
     };
 }
+
+export interface ThreadMessage {
+    id: string;
+    from: 'member' | 'ops';
+    authorName: string;
+    body: string;
+    at: string;
+}
+
+export interface MessageThread {
+    id: string;
+    subject: string;
+    kind: 'Member' | 'Guest' | 'System';
+    participantId?: string;   // links the thread to a member/guest identity
+    participantName: string;
+    participantAvatar?: string;
+    unread: boolean;
+    messages: ThreadMessage[];
+}

@@ -1,11 +1,11 @@
-import { Member, Application, AccessAnomaly, RevenueOpportunity, AuditEntry, Suite, Booking, Guest } from '../types';
+import { Member, Application, AccessAnomaly, RevenueOpportunity, AuditEntry, Suite, Booking, Guest, MessageThread } from '../types';
 
 
 export const initialMembers: Member[] = [
     {
         id: 'm-001',
         name: 'Kevin Balfe',
-        email: 'alex@sterling-holdings.com',
+        email: 'kevin@balfe-holdings.com',
         avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200',
         tier: 'Founder',
         status: 'Active',
@@ -201,5 +201,56 @@ export const initialGuests: Guest[] = [
         status: 'Approved',
         trustScore: 90,
         checks: { idVerified: true, billingCurrent: true, backgroundClear: true },
+    },
+];
+
+export const initialThreads: MessageThread[] = [
+    {
+        id: 'th-001',
+        subject: 'Suite upgrade for the June 20 fixture',
+        kind: 'Member',
+        participantId: 'm-002',
+        participantName: 'Elena Vance',
+        participantAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=200',
+        unread: true,
+        messages: [
+            { id: 'msg-001', from: 'member', authorName: 'Elena Vance', body: 'Hi — I have the Obsidian Room for ARENA vs Northside on June 20, but my party grew to 11. Can I move up to the Zenith Loft if it is open? Happy to cover the difference.', at: '2026-05-25T09:12:00Z' },
+        ],
+    },
+    {
+        id: 'th-002',
+        subject: 'Guest pass still pending — Jordan Bell',
+        kind: 'Guest',
+        participantId: 'm-002',
+        participantName: 'Elena Vance',
+        participantAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=200',
+        unread: true,
+        messages: [
+            { id: 'msg-002', from: 'member', authorName: 'Elena Vance', body: 'I sponsored Jordan Bell for a guest pass last week and it still shows pending. He is flying in for the concert Friday — anything holding it up on your side?', at: '2026-05-25T08:40:00Z' },
+            { id: 'msg-003', from: 'ops', authorName: 'Operator Seven', body: 'Thanks Elena — his background check is still processing with the vendor. We will chase it today and confirm before Thursday noon.', at: '2026-05-25T08:55:00Z' },
+        ],
+    },
+    {
+        id: 'th-003',
+        subject: 'Question about my billing hold',
+        kind: 'Member',
+        participantId: 'm-003',
+        participantName: 'Julian Thorne',
+        participantAvatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=200',
+        unread: false,
+        messages: [
+            { id: 'msg-004', from: 'member', authorName: 'Julian Thorne', body: 'My card was declined for the season renewal and now my access badge reads limited. What do I need to clear this?', at: '2026-05-24T16:20:00Z' },
+            { id: 'msg-005', from: 'ops', authorName: 'Elena Vance', body: 'Julian, your account is on a temporary watch while billing reconciles. Update the card on file and access is restored automatically once the payment clears.', at: '2026-05-24T17:05:00Z' },
+        ],
+    },
+    {
+        id: 'th-004',
+        subject: 'Nightly digest · 2 anomalies, 3 applications',
+        kind: 'System',
+        participantName: 'Empreinte Sentinel',
+        unread: false,
+        messages: [
+            { id: 'msg-006', from: 'member', authorName: 'Empreinte Sentinel', body: 'Overnight summary: 2 access anomalies flagged (1 high severity), 3 applications awaiting review, 1 guest pass issued. Trust-Health Index steady at 96.4%.', at: '2026-05-25T06:00:00Z' },
+        ],
     },
 ];

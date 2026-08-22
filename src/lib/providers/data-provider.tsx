@@ -1,8 +1,8 @@
 "use client";
 
-import React, { createContext, useContext, useState } from 'react';
-import { Member, Application, RiskSignal, AccessAnomaly, RevenueOpportunity, AuditEntry, Booking, Guest } from '@/lib/types';
-import { initialMembers, initialApplications, initialOpportunities, initialAnomalies, initialAuditLog, initialBookings, initialSuites, initialGuests } from '@/lib/services/seed-data';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { Member, Application, RiskSignal, AccessAnomaly, RevenueOpportunity, AuditEntry, Booking, Guest, MessageThread } from '@/lib/types';
+import { initialMembers, initialApplications, initialOpportunities, initialAnomalies, initialAuditLog, initialBookings, initialSuites, initialGuests, initialThreads } from '@/lib/services/seed-data';
 
 interface DataContextType {
     members: Member[];
@@ -12,6 +12,7 @@ interface DataContextType {
     auditLog: AuditEntry[];
     bookings: Booking[];
     guests: Guest[];
+    threads: MessageThread[];
 
     // Actions
     approveApplication: (appId: string, operator: string, reason: string) => void;
@@ -28,7 +29,13 @@ interface DataContextType {
     issueGuestPass: (guestId: string, operator: string, reason: string) => void;
     denyGuest: (guestId: string, operator: string, reason: string) => void;
     addAuditEntry: (operator: string, action: string, targetId: string, reason: string) => void;
+    addApplication: (input: { name: string; email: string; tier: Application['tier']; referralId?: string }) => Application;
+    replyToThread: (threadId: string, operator: string, body: string) => void;
+    markThreadRead: (threadId: string) => void;
+    resetDemoData: () => void;
 }
+
+const STORE_KEY = 'empreinte_session_v1';
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
@@ -40,6 +47,51 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     const [auditLog, setAuditLog] = useState<AuditEntry[]>(initialAuditLog);
     const [bookings] = useState<Booking[]>(initialBookings);
     const [guests, setGuests] = useState<Guest[]>(initialGuests);
+    const [threads, setThreads] = useState<MessageThread[]>(initialThreads);
+    const [hydrated, setHydrated] = useState(false);
+
+    // Restore the session on mount, then keep it in sync. Seeded defaults are
+    // used whenever nothing has been stored yet.
+    useEffect(() => {
+        try {
+            const raw = localStorage.getItem(STORE_KEY);
+            if (raw) {
+                const snap = JSON.parse(raw);
+                if (snap.members) setMembers(snap.members);
+                if (snap.applications) setApplications(snap.applications);
+                if (snap.opportunities) setOpportunities(snap.opportunities);
+                if (snap.anomalies) setAnomalies(snap.anomalies);
+                if (snap.auditLog) setAuditLog(snap.auditLog);
+                if (snap.guests) setGuests(snap.guests);
+                if (snap.threads) setThreads(snap.threads);
+            }
+        } catch {
+            // Corrupt or unavailable storage just falls back to seed data.
+        }
+        setHydrated(true);
+    }, []);
+
+    useEffect(() => {
+        if (!hydrated) return;
+        try {
+            localStorage.setItem(STORE_KEY, JSON.stringify({
+                members, applications, opportunities, anomalies, auditLog, guests, threads,
+            }));
+        } catch {
+            // Quota or private-mode failures are non-fatal; the session just stops persisting.
+        }
+    }, [hydrated, members, applications, opportunities, anomalies, auditLog, guests, threads]);
+
+    const resetDemoData = () => {
+        try { localStorage.removeItem(STORE_KEY); } catch {}
+        setMembers(initialMembers);
+        setApplications(initialApplications);
+        setOpportunities(initialOpportunities);
+        setAnomalies(initialAnomalies);
+        setAuditLog(initialAuditLog);
+        setGuests(initialGuests);
+        setThreads(initialThreads);
+    };
 
     const addAuditEntry = (operator: string, action: string, targetId: string, reason: string) => {
         const entry: AuditEntry = {
@@ -130,6 +182,46 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         addAuditEntry(operator, 'ISSUE_GUEST_PASS', guestId, reason || 'Guest pass issued after vetting.');
     };
 
+    // Public application intake from the landing page. Risk is scored on arrival;
+    // payment is only collected after vetting clears, so no payment data lives here.
+    const addApplication: DataContextType['addApplication'] = ({ name, email, tier, referralId }) => {
+        const id = `app-${String(Date.now()).slice(-6)}`;
+        let riskScore = 12;
+        if (/temp-mail|scam|mailinator|guerrilla/i.test(email)) riskScore += 45;
+        if (referralId && !members.some(m => m.id === referralId)) riskScore += 20;
+        if (referralId && members.some(m => m.id === referralId)) riskScore -= 5;
+        const app: Application = {
+            id, name, email,
+            avatarUrl: '',
+            tier,
+            appliedDate: new Date().toISOString(),
+            status: 'Pending',
+            riskScore: Math.max(1, Math.min(99, riskScore)),
+        };
+        setApplications(prev => [app, ...prev]);
+        addAuditEntry('public.intake', 'APPLICATION_RECEIVED', id, `Membership application received for ${tier} tier${referralId ? ` · referred by ${referralId}` : ''}.`);
+        return app;
+    };
+
+    const replyToThread = (threadId: string, operator: string, body: string) => {
+        setThreads(prev => prev.map(t => t.id === threadId ? {
+            ...t,
+            unread: false,
+            messages: [...t.messages, {
+                id: `msg-${String(Date.now()).slice(-6)}`,
+                from: 'ops' as const,
+                authorName: operator,
+                body,
+                at: new Date().toISOString(),
+            }],
+        } : t));
+        addAuditEntry(operator, 'MESSAGE_SENT', threadId, 'Reply sent from the Inbox.');
+    };
+
+    const markThreadRead = (threadId: string) => {
+        setThreads(prev => prev.map(t => t.id === threadId ? { ...t, unread: false } : t));
+    };
+
     const denyGuest = (guestId: string, operator: string, reason: string) => {
         setGuests(prev => prev.map(g => g.id === guestId ? { ...g, status: 'Denied' } : g));
         addAuditEntry(operator, 'DENY_GUEST', guestId, reason || 'Guest request denied at vetting.');
@@ -137,10 +229,11 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
     return (
         <DataContext.Provider value={{
-            members, applications, opportunities, anomalies, auditLog, bookings, guests,
+            members, applications, opportunities, anomalies, auditLog, bookings, guests, threads,
             approveApplication, rejectApplication, waitlistApplication, requestInfoApplication,
             restrictMember, watchMember, reinstateMember, approveOpportunity, dismissOpportunity,
-            dismissAnomaly, addMember, issueGuestPass, denyGuest, addAuditEntry
+            dismissAnomaly, addMember, issueGuestPass, denyGuest, addAuditEntry,
+            addApplication, replyToThread, markThreadRead, resetDemoData
         }}>
             {children}
         </DataContext.Provider>

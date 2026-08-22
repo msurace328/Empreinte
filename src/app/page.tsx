@@ -1,11 +1,14 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/use-auth';
 import { MemberPortalDashboard } from '@/components/member/portal-dashboard';
+import { ApplyDialog, TIERS, money } from '@/components/public/apply-dialog';
+import { MembershipTier } from '@/lib/types';
+import { cn } from '@/lib/utils';
 import {
-    LayoutDashboard, ShieldCheck, Lock, Ticket, Network, Brain, History, ShieldAlert, ArrowRight, Check,
+    LayoutDashboard, ShieldCheck, Lock, Ticket, Network, Brain, History, ShieldAlert, ArrowRight, Check, Star,
 } from 'lucide-react';
 
 const FEATURES = [
@@ -76,6 +79,10 @@ function ScanLogo() {
 
 export default function Home() {
     const { user, isLoading } = useAuth();
+    const [applyOpen, setApplyOpen] = useState(false);
+    const [applyTier, setApplyTier] = useState<MembershipTier | undefined>();
+
+    const openApply = (tier?: MembershipTier) => { setApplyTier(tier); setApplyOpen(true); };
 
     if (isLoading) return null;
 
@@ -108,14 +115,81 @@ export default function Home() {
                         immutable trail, and surfaces the revenue your suites are leaving on the table. Built for
                         ARENA — where a membership is your key to private suites at sporting events and concerts.
                     </p>
-                    <div className="mt-8">
-                        <Link
-                            href="/admin"
+                    <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+                        <button
+                            onClick={() => openApply()}
                             className="inline-flex items-center gap-2 rounded-lg bg-signal-cyan text-canvas-black font-bold px-6 py-3 text-sm transition-all hover:bg-signal-cyan/90 shadow-[0_0_24px_rgba(94,230,201,0.25)]"
                         >
-                            Enter the Command Center <ArrowRight className="size-4" />
+                            Apply for membership <ArrowRight className="size-4" />
+                        </button>
+                        <Link
+                            href="/admin"
+                            className="inline-flex items-center gap-2 rounded-lg border border-border-muted px-6 py-3 text-sm font-medium text-muted-foreground transition-colors hover:border-signal-cyan/40 hover:text-foreground"
+                        >
+                            Enter the Command Center
                         </Link>
                     </div>
+                </div>
+
+                {/* Membership tiers */}
+                <div className="mt-20">
+                    <div className="text-center">
+                        <div className="text-[10px] font-mono uppercase tracking-[0.25em] text-muted-foreground mb-2">Membership</div>
+                        <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">A key, not a ticket.</h2>
+                        <p className="text-sm text-muted-foreground mt-3 max-w-xl mx-auto leading-relaxed">
+                            Every ARENA membership is vetted before it is sold. Apply, clear identity review,
+                            then take your suite for the season — sport and concerts alike.
+                        </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mt-10">
+                        {TIERS.map((t) => (
+                            <div
+                                key={t.tier}
+                                className={cn(
+                                    'relative rounded-2xl border p-6 flex flex-col transition-colors',
+                                    t.featured
+                                        ? 'border-signal-cyan/40 bg-signal-cyan/[0.04] shadow-[0_0_40px_rgba(94,230,201,0.08)]'
+                                        : 'border-border-muted glass hover:border-signal-cyan/25'
+                                )}
+                            >
+                                {t.featured && (
+                                    <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 inline-flex items-center gap-1 rounded-full bg-signal-cyan px-2.5 py-0.5 text-[9px] font-mono uppercase tracking-widest text-canvas-black font-bold">
+                                        <Star className="size-2.5" /> Most taken
+                                    </div>
+                                )}
+                                <div className="text-sm font-bold tracking-tight">{t.tier}</div>
+                                <div className="text-[11px] text-muted-foreground mt-0.5">{t.tagline}</div>
+                                <div className="mt-4 flex items-baseline gap-1.5">
+                                    <span className="text-3xl font-bold font-mono tracking-tighter">{money(t.price)}</span>
+                                    <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest">{t.cadence}</span>
+                                </div>
+                                <ul className="mt-5 space-y-2.5 flex-1">
+                                    {t.perks.map((p) => (
+                                        <li key={p} className="flex items-start gap-2 text-xs text-muted-foreground leading-snug">
+                                            <Check className="size-3.5 text-signal-cyan mt-0.5 shrink-0" />
+                                            <span>{p}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                                <button
+                                    onClick={() => openApply(t.tier)}
+                                    className={cn(
+                                        'mt-6 w-full rounded-lg py-2.5 text-xs font-bold transition-colors',
+                                        t.featured
+                                            ? 'bg-signal-cyan text-canvas-black hover:bg-signal-cyan/90'
+                                            : 'border border-border-muted text-foreground hover:border-signal-cyan/40 hover:text-signal-cyan'
+                                    )}
+                                >
+                                    Apply for {t.tier}
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+
+                    <p className="text-center text-[10px] font-mono text-muted-foreground/60 mt-6 flex items-center justify-center gap-2">
+                        <Lock className="size-3" /> No payment is collected until your application clears identity review.
+                    </p>
                 </div>
 
                 {/* What's inside */}
@@ -148,6 +222,8 @@ export default function Home() {
                     </div>
                 </div>
             </div>
+
+            <ApplyDialog open={applyOpen} onOpenChange={setApplyOpen} initialTier={applyTier} />
         </main>
     );
 }

@@ -1,6 +1,7 @@
 "use client";
 import React, { useMemo, useState } from 'react';
 import { useData } from '@/lib/providers/data-provider';
+import { MoonshotVault } from '@/components/dashboard/moonshot-vault';
 import { initialSuites } from '@/lib/services/seed-data';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -239,6 +240,8 @@ export default function RevenuePage() {
                     )}
                 </CardContent>
             </Card>
+            <MoonshotVault />
+
         </div>
     );
 }

@@ -4,6 +4,8 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
+    RotateCcw,
+    Inbox,
     LayoutDashboard,
     Users,
     UserPlus,
@@ -19,6 +21,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth, UserRole } from '@/hooks/use-auth';
+import { useData } from '@/lib/providers/data-provider';
 import { useRouter } from 'next/navigation';
 import {
     DropdownMenu,
@@ -42,6 +45,7 @@ const navItems: NavItem[] = [
     { title: 'Command Center', href: '/admin', icon: LayoutDashboard, roles: ['Admin', 'MembershipDirector', 'FrontDesk', 'Auditor'] },
     { title: 'Review Queue', href: '/admin/applications', icon: UserPlus, roles: ['Admin', 'MembershipDirector'] },
     { title: 'Members', href: '/admin/members', icon: Users, roles: ['Admin', 'MembershipDirector', 'FrontDesk', 'Auditor'] },
+    { title: 'Inbox', href: '/admin/inbox', icon: Inbox, roles: ['Admin', 'MembershipDirector', 'FrontDesk'] },
     { title: 'Access & Guests', href: '/admin/access', icon: Lock, roles: ['Admin', 'MembershipDirector', 'FrontDesk', 'Auditor'] },
     { title: 'Suites & Game-Day', href: '/admin/suites', icon: Ticket, roles: ['Admin', 'MembershipDirector', 'FrontDesk', 'Auditor'] },
     { title: 'Member Graph', href: '/admin/graph', icon: Network, roles: ['Admin', 'MembershipDirector', 'Auditor'] },
@@ -54,6 +58,7 @@ export function Sidebar() {
     const pathname = usePathname();
     const router = useRouter();
     const { user, setRole } = useAuth();
+    const { resetDemoData } = useData();
 
     if (!user || user.role === 'Member') return null;
 
@@ -129,6 +134,10 @@ export function Sidebar() {
                             </DropdownMenuItem>
                         ))}
                         <DropdownMenuSeparator className="bg-border-muted" />
+                        <DropdownMenuItem className="cursor-pointer" onClick={resetDemoData}>
+                            <RotateCcw className="mr-2 size-4" />
+                            Reset demo data
+                        </DropdownMenuItem>
                         <DropdownMenuItem className="text-destructive focus:text-destructive">
                             <LogOut className="mr-2 size-4" />
                             Logout

@@ -3,6 +3,7 @@ import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/hooks/use-auth";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { DataProvider } from "@/lib/providers/data-provider";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -28,9 +29,11 @@ export default function RootLayout({
     <html lang="en" className="dark">
       <body className={`${inter.variable} ${mono.variable} font-sans antialiased bg-canvas-black text-foreground`}>
         <AuthProvider>
-          <TooltipProvider>
-            {children}
-          </TooltipProvider>
+          <DataProvider>
+            <TooltipProvider>
+              {children}
+            </TooltipProvider>
+          </DataProvider>
         </AuthProvider>
       </body>
     </html>

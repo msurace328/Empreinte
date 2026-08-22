@@ -31,6 +31,10 @@ const STEPS: TourStep[] = [
         body: 'The full roster. Open any member to get their dossier: trust gauge, identity intelligence (device fingerprints, image forensics, duplicate documents), access anomalies, booking history, and their personal audit trail.',
     },
     {
+        anchor: '/admin/inbox', route: '/admin/inbox', title: 'Inbox', roles: ['Admin', 'MembershipDirector', 'FrontDesk'],
+        body: 'Member and guest messages, attached to the identity behind them. Every thread shows that person\u2019s live trust score and status, so you answer knowing who you are talking to — and one click opens their full dossier. Replies are audited under your name.',
+    },
+    {
         anchor: '/admin/access', route: '/admin/access', title: 'Access & Guests', roles: ALL,
         body: 'Who can get through the door right now. Watchlist, restrict, or reinstate credentials; spot stale access that should be revoked; and vet sponsored guests — ID, billing, and background checks — before a pass is ever issued.',
     },
@@ -44,7 +48,7 @@ const STEPS: TourStep[] = [
     },
     {
         anchor: '/admin/revenue', route: '/admin/revenue', title: 'Revenue Intel', roles: ['Admin', 'MembershipDirector'],
-        body: 'The money you are leaving on the table. Gaps computed live from booking, suite, and member data — plus an on-demand Claude analysis that surfaces non-obvious opportunities. Approve or dismiss each one; both are audited.',
+        body: 'The money you are leaving on the table. Gaps computed live from booking, suite, and member data, plus an on-demand Claude analysis. Scroll to the bottom for the Moonshot Vault — four unconventional plays modeled on assets you already own, visible to the founder seat only.',
     },
     {
         anchor: '/admin/audit', route: '/admin/audit', title: 'Audit Log', roles: ['Admin', 'Auditor'],

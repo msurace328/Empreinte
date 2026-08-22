@@ -12,13 +12,26 @@ Empreinte vets members, governs who gets through the door, logs every decision i
 | --- | --- | --- |
 | **Command Center** | `/admin` | Trust-health index, live anomaly feed, KPIs at a glance |
 | **Review Queue** | `/admin/applications` | Applicant vetting with risk scoring — approve, waitlist, request info, reject |
+| **Inbox** | `/admin/inbox` | Member & guest threads tied to identity — live trust score in the header, replies audited |
 | **Members** | `/admin/members` | Roster with per-member dossiers: identity intelligence, anomalies, bookings, audit trail |
 | **Access & Guests** | `/admin/access` | Live credential posture, guest vetting, watchlist / restrict / reinstate |
 | **Suites & Game-Day** | `/admin/suites` | Suite inventory, occupancy, fixture schedule with guest lists |
 | **Member Graph** | `/admin/graph` | Trust & referral topology — flags circular-vouching rings |
-| **Revenue Intel** | `/admin/revenue` | Revenue gaps computed from live data, plus optional Claude-powered analysis |
+| **Revenue Intel** | `/admin/revenue` | Revenue gaps from live data, Claude-powered analysis, and the founder-only Moonshot Vault |
 | **Audit Log** | `/admin/audit` | Hash-chained, append-only record of every operator decision |
 | **Security** | `/admin/settings` | Role-based access control and security posture |
+
+## How members join
+
+ARENA is vetted, so the flow is **apply → vet → approve → pay → access**: no card is collected until identity review clears. The landing page carries the tier pricing and a live application form — submissions are risk-scored on arrival (disposable-email detection, referral provenance) and land straight in the Review Queue, audited as `APPLICATION_RECEIVED`.
+
+Pricing lives in one place: the `TIERS` array in `src/components/public/apply-dialog.tsx`. Edit those numbers and the pricing cards, apply dialog, and payment step all update.
+
+## Session persistence
+
+There is no backend. State is seeded from `src/lib/services/seed-data.ts` and persisted to `localStorage` under `empreinte_session_v1`, so an application you submit survives a refresh. **Reset demo data** in the sidebar user menu restores the seed.
+
+## The landing page
 
 The landing page (`/`) doubles as the member portal: switch the demo role to **Member** and it becomes a self-service dashboard with suite booking.
 
@@ -52,6 +65,10 @@ cp .env.example .env.local
 ```
 
 Without the key everything else works; the button surfaces a clear error instead.
+
+## Guided tour
+
+Every admin page carries a **Tour** button (bottom-right). It spotlights each sidebar tab in turn with a written explanation of what it does, navigating the page as it goes. Arrow keys or the on-screen arrows step through it; steps are filtered to the signed-in role. It opens itself once on a first visit.
 
 ## Roles
 
