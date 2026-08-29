@@ -29,7 +29,11 @@ import { useData } from '@/lib/providers/data-provider';
 
 export function MemberPortalDashboard() {
     const { user, setRole } = useAuth();
-    const { guests } = useData();
+    const { guests, openThread } = useData();
+    const [contactOpen, setContactOpen] = useState(false);
+    const [billingOpen, setBillingOpen] = useState(false);
+    const [note, setNote] = useState('');
+    const [sent, setSent] = useState(false);
     const [member, setMember] = useState<Member | null>(null);
     const [bookings, setBookings] = useState<Booking[]>([]);
     const [isBookingOpen, setIsBookingOpen] = useState(false);
@@ -285,7 +289,17 @@ export function MemberPortalDashboard() {
                             <h2 className="text-sm font-mono uppercase tracking-widest text-muted-foreground flex items-center gap-2">
                                 <History className="size-3" /> Booking History
                             </h2>
-                            <Button variant="link" className="text-signal-cyan p-0 h-auto text-[10px] font-mono uppercase tracking-widest">Download Invoices</Button>
+                            <Button variant="link" onClick={() => {
+                                const rows = [
+                                    ['date', 'suite', 'party_size', 'hours', 'amount_usd', 'status'],
+                                    ...bookings.map(b => [b.date.slice(0, 10), b.suiteId, b.partySize, b.duration, b.amount, b.status]),
+                                ];
+                                const csv = rows.map(r => r.map(c => `"${c}"`).join(',')).join('\n');
+                                const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+                                const a = document.createElement('a');
+                                a.href = url; a.download = `arena-invoices-${member.id}.csv`; a.click();
+                                URL.revokeObjectURL(url);
+                            }} className="text-signal-cyan p-0 h-auto text-[10px] font-mono uppercase tracking-widest">Download Invoices</Button>
                         </div>
 
                         <div className="space-y-4">
@@ -308,9 +322,9 @@ export function MemberPortalDashboard() {
                                     </div>
                                     <div className="text-right">
                                         <p className="text-lg font-bold font-mono text-foreground">${booking.amount.toLocaleString()}</p>
-                                        <Button variant="ghost" size="sm" className="h-6 px-1 text-[10px] font-mono uppercase text-muted-foreground group-hover:text-signal-cyan">
-                                            Details <ArrowUpRight className="ml-1 size-3" />
-                                        </Button>
+                                        <span className="text-[10px] font-mono uppercase text-muted-foreground">
+                                            {booking.duration}h · {booking.partySize} guests
+                                        </span>
                                     </div>
                                 </div>
                             ))}
@@ -345,7 +359,7 @@ export function MemberPortalDashboard() {
                                     </div>
                                     <Badge variant="secondary" className="text-[8px] uppercase font-mono">Primary</Badge>
                                 </div>
-                                <Button variant="outline" className="w-full glass text-[10px] font-mono uppercase tracking-widest border-border-muted">Manage Billing</Button>
+                                <Button variant="outline" onClick={() => setBillingOpen(true)} className="w-full glass text-[10px] font-mono uppercase tracking-widest border-border-muted">Manage Billing</Button>
                             </CardContent>
                         </Card>
 
@@ -355,11 +369,72 @@ export function MemberPortalDashboard() {
                                 <h4 className="text-sm font-bold">Support & Safety</h4>
                             </div>
                             <p className="text-xs text-muted-foreground leading-relaxed mb-6">Empreinte protects your identity and access. If you suspect any account compromise, contact your Membership Director immediately.</p>
-                            <Button variant="ghost" className="w-full bg-canvas-muted/50 text-[10px] font-mono uppercase tracking-widest border border-border-muted">Contact Security</Button>
+                            <Button variant="ghost" onClick={() => setContactOpen(true)} className="w-full bg-canvas-muted/50 text-[10px] font-mono uppercase tracking-widest border border-border-muted">Contact Security</Button>
                         </Card>
                     </div>
                 </section>
             </div>
+
+            {/* Billing */}
+            <Dialog open={billingOpen} onOpenChange={setBillingOpen}>
+                <DialogContent className="glass border-border-muted bg-canvas-card">
+                    <DialogHeader>
+                        <DialogTitle>Payments &amp; tier</DialogTitle>
+                        <DialogDescription className="text-xs">Your {member.tier} membership.</DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-3 py-1">
+                        {[
+                            { k: 'Membership', v: `${member.tier} · $${(member.tier === 'Founder' ? 400000 : member.tier === 'Suite' ? 165000 : 45000).toLocaleString()} per season` },
+                            { k: 'Card on file', v: 'Visa ending 4417' },
+                            { k: 'Next payment', v: format(renewal, 'MMM d, yyyy') },
+                            { k: 'Bookings this season', v: `${bookings.length}` },
+                            { k: 'Booking spend', v: `$${bookings.reduce((a, b) => a + b.amount, 0).toLocaleString()}` },
+                        ].map(r => (
+                            <div key={r.k} className="flex items-center justify-between border-b border-border-muted last:border-0 py-2">
+                                <span className="text-xs text-muted-foreground">{r.k}</span>
+                                <span className="text-sm font-mono">{r.v}</span>
+                            </div>
+                        ))}
+                        <p className="text-[10px] text-muted-foreground/70 pt-1">
+                            To change the card on file, message the membership team — we never take card details over chat.
+                        </p>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            {/* Contact security — lands in the ops Inbox */}
+            <Dialog open={contactOpen} onOpenChange={(o) => { setContactOpen(o); if (!o) { setSent(false); setNote(''); } }}>
+                <DialogContent className="glass border-border-muted bg-canvas-card">
+                    <DialogHeader>
+                        <DialogTitle>Contact security</DialogTitle>
+                        <DialogDescription className="text-xs">
+                            Goes straight to the ARENA membership desk with your identity attached.
+                        </DialogDescription>
+                    </DialogHeader>
+                    {sent ? (
+                        <div className="py-6 text-center">
+                            <p className="text-sm font-medium text-emerald-400">Message sent.</p>
+                            <p className="text-xs text-muted-foreground mt-1.5">
+                                The team sees it in their inbox with your standing attached.
+                            </p>
+                        </div>
+                    ) : (
+                        <>
+                            <div className="py-1">
+                                <Input value={note} onChange={e => setNote(e.target.value)}
+                                    onKeyDown={e => { if (e.key === 'Enter' && note.trim()) { openThread({ subject: 'Message from the member portal', body: note.trim(), memberId: member.id, memberName: member.name, avatarUrl: member.avatarUrl }); setSent(true); } }}
+                                    placeholder="What do you need?" className="bg-canvas-muted" />
+                            </div>
+                            <DialogFooter>
+                                <Button variant="outline" onClick={() => setContactOpen(false)}>Cancel</Button>
+                                <Button disabled={!note.trim()}
+                                    onClick={() => { openThread({ subject: 'Message from the member portal', body: note.trim(), memberId: member.id, memberName: member.name, avatarUrl: member.avatarUrl }); setSent(true); }}
+                                    className="bg-signal-cyan text-canvas-black hover:bg-signal-cyan/90">Send</Button>
+                            </DialogFooter>
+                        </>
+                    )}
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

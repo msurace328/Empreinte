@@ -42,6 +42,7 @@ interface DataContextType {
     backend: 'kv' | 'memory' | 'unavailable';
     hydrated: boolean;
     sponsorGuest: (input: { name: string; sponsorId: string; sponsorName: string }) => Guest;
+    openThread: (input: { subject: string; body: string; memberId: string; memberName: string; avatarUrl?: string }) => MessageThread;
     issueInvoice: (input: { applicationId: string; operator: string }) => Invoice | null;
     markInvoicePaid: (invoiceId: string) => Invoice | null;
     addExpense: (input: Omit<Expense, 'id'>, operator: string) => Expense;
@@ -422,6 +423,30 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         return guest;
     };
 
+    // A member writing in from the portal creates the same thread the ops
+    // Inbox works from — one queue, whichever side it came from.
+    const openThread: DataContextType['openThread'] = ({ subject, body, memberId, memberName, avatarUrl }) => {
+        const thread: MessageThread = {
+            id: `th-${String(Date.now()).slice(-5)}`,
+            subject,
+            kind: 'Member',
+            participantId: memberId,
+            participantName: memberName,
+            participantAvatar: avatarUrl,
+            unread: true,
+            messages: [{
+                id: `msg-${String(Date.now()).slice(-5)}`,
+                from: 'member',
+                authorName: memberName,
+                body,
+                at: new Date().toISOString(),
+            }],
+        };
+        setThreads(prev => [thread, ...prev]);
+        addAuditEntry(`member.${memberName}`, 'MEMBER_MESSAGE', thread.id, subject);
+        return thread;
+    };
+
     const replyToThread = (threadId: string, operator: string, body: string) => {
         setThreads(prev => prev.map(t => t.id === threadId ? {
             ...t,
@@ -452,7 +477,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
             approveApplication, rejectApplication, waitlistApplication, requestInfoApplication,
             restrictMember, watchMember, reinstateMember, approveOpportunity, dismissOpportunity,
             dismissAnomaly, addMember, issueGuestPass, denyGuest, addAuditEntry,
-            addApplication, replyToThread, markThreadRead, tamperWithAuditEntry, resealAuditLog, resetDemoData, recordCheckIn, backend, hydrated, sponsorGuest, invoices, issueInvoice, markInvoicePaid, expenses, addExpense
+            addApplication, replyToThread, markThreadRead, tamperWithAuditEntry, resealAuditLog, resetDemoData, recordCheckIn, backend, hydrated, sponsorGuest, openThread, invoices, issueInvoice, markInvoicePaid, expenses, addExpense
         }}>
             {children}
         </DataContext.Provider>
