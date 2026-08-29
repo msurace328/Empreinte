@@ -72,18 +72,23 @@ export function CoverGate({ children }: { children: React.ReactNode }) {
     const finish = useCallback(() => {
         sessionStorage.setItem(SEEN_KEY, '1');
         setPhase('granted');
-        // Let the roar breathe for a beat, then fade the whole cover out.
+        // The crowd carries the moment, so it rides at full strength through
+        // "access granted" and only falls away as the cover itself leaves.
+        // Fading it the instant the verdict appears made the roar sound cut off.
         const a = ambienceRef.current;
         if (a) a.pause();
-        const r = roarRef.current;
-        if (r) {
-            const fade = setInterval(() => {
-                if (r.volume > 0.06) r.volume = Math.max(0, r.volume - 0.06);
-                else { r.pause(); clearInterval(fade); }
-            }, 90);
-        }
-        timers.current.push(setTimeout(() => setLeaving(true), 900));
-        timers.current.push(setTimeout(() => { stopAll(); setActive(false); }, 1700));
+
+        timers.current.push(setTimeout(() => {
+            setLeaving(true);
+            const r = roarRef.current;
+            if (r) {
+                const fade = setInterval(() => {
+                    if (r.volume > 0.05) r.volume = Math.max(0, r.volume - 0.05);
+                    else { r.pause(); clearInterval(fade); }
+                }, 55);
+            }
+        }, 1500));
+        timers.current.push(setTimeout(() => { stopAll(); setActive(false); }, 2700));
     }, [stopAll]);
 
     const beginHold = useCallback(() => {
