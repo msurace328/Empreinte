@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useAuth, UserRole } from '@/hooks/use-auth';
 import { ArrowLeft, ArrowRight, Compass, X } from 'lucide-react';
@@ -76,6 +76,7 @@ const SEEN_KEY = 'empreinte_tour_seen';
 
 export function GuidedTour() {
     const router = useRouter();
+    const pathname = usePathname();
     const { user } = useAuth();
     const [open, setOpen] = useState(false);
     const [index, setIndex] = useState(0);
@@ -87,13 +88,16 @@ export function GuidedTour() {
     );
     const step = steps[index];
 
-    // First visit: open the tour on its own after the shell settles.
+    // First visit only, and only from the landing route. The tour drives
+    // navigation, so auto-opening while someone is already reading another
+    // page would yank them out of it mid-task.
     useEffect(() => {
         if (!user || user.role === 'Member') return;
-        if (!localStorage.getItem(SEEN_KEY)) {
-            const t = setTimeout(() => setOpen(true), 1200);
-            return () => clearTimeout(t);
-        }
+        if (pathname !== '/admin' && pathname !== '/admin/door') return;
+        if (localStorage.getItem(SEEN_KEY)) return;
+        const t = setTimeout(() => setOpen(true), 1200);
+        return () => clearTimeout(t);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [user]);
 
     const start = useCallback(() => { setIndex(0); setOpen(true); }, []);

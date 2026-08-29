@@ -4,7 +4,11 @@ import { getStore } from '@/lib/server/store';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-const KEY = 'empreinte:session';
+// Namespaced per environment. Without this, a local dev server holding the
+// same KV credentials reads and writes the *production* session — local
+// testing would silently mutate what visitors see.
+const ENV = process.env.VERCEL_ENV ?? 'local';
+const KEY = `empreinte:session:${ENV}`;
 const MAX_BYTES = 512 * 1024;
 
 // GET /api/state — returns the persisted session, or null on a fresh install.

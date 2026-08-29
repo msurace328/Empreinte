@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Member, Application, RiskSignal, AccessAnomaly, RevenueOpportunity, AuditEntry, Booking, Guest, MessageThread, CheckInEvent, CheckInResult, Invoice, Expense } from '@/lib/types';
+import { hashEntry, rechain, GENESIS } from '@/lib/hash-chain';
 import { initialMembers, initialApplications, initialOpportunities, initialAnomalies, initialAuditLog, initialBookings, initialSuites, initialGuests, initialThreads, initialExpenses } from '@/lib/services/seed-data';
 
 interface DataContextType {
@@ -32,6 +33,8 @@ interface DataContextType {
     issueGuestPass: (guestId: string, operator: string, reason: string) => void;
     denyGuest: (guestId: string, operator: string, reason: string) => void;
     addAuditEntry: (operator: string, action: string, targetId: string, reason: string) => void;
+    tamperWithAuditEntry: (entryId: string) => void;
+    resealAuditLog: () => void;
     addApplication: (input: { name: string; email: string; tier: Application['tier']; referralId?: string }) => Application;
     replyToThread: (threadId: string, operator: string, body: string) => void;
     markThreadRead: (threadId: string) => void;
@@ -51,7 +54,9 @@ interface DataContextType {
 // Bump when the seed data shape or content changes. Sessions saved under an
 // older version are discarded on load, so shipped seed updates actually reach
 // people who already have a session stored.
-const SESSION_VERSION = 2;
+// v3: audit entries carry a real SHA-256 chain; v2 sessions hold the old
+// placeholder hashes and would fail verification, so they are retired.
+const SESSION_VERSION = 3;
 const STORE_KEY = `empreinte_session_v${SESSION_VERSION}`;
 
 // Kept in sync with the TIERS constant the public pricing page renders.
@@ -75,7 +80,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     const [applications, setApplications] = useState<Application[]>(initialApplications);
     const [opportunities, setOpportunities] = useState<RevenueOpportunity[]>(initialOpportunities);
     const [anomalies, setAnomalies] = useState<AccessAnomaly[]>(initialAnomalies);
-    const [auditLog, setAuditLog] = useState<AuditEntry[]>(initialAuditLog);
+    const [auditLog, setAuditLog] = useState<AuditEntry[]>(() => rechain(initialAuditLog));
     const [bookings] = useState<Booking[]>(initialBookings);
     const [guests, setGuests] = useState<Guest[]>(initialGuests);
     const [threads, setThreads] = useState<MessageThread[]>(initialThreads);
@@ -84,6 +89,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     const [expenses, setExpenses] = useState<Expense[]>(initialExpenses);
     const [hydrated, setHydrated] = useState(false);
     const [backend, setBackend] = useState<'kv' | 'memory' | 'unavailable'>('unavailable');
+    // Original wording of any record the demo has rewritten, so it can be undone.
+    const tamperedOriginals = React.useRef(new Map<string, string>());
 
     // Restore the session on mount, then keep it in sync. The server is the
     // source of truth when a store is configured; localStorage is the offline
@@ -160,7 +167,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         setApplications(initialApplications);
         setOpportunities(initialOpportunities);
         setAnomalies(initialAnomalies);
-        setAuditLog(initialAuditLog);
+        setAuditLog(rechain(initialAuditLog));
         setGuests(initialGuests);
         setThreads(initialThreads);
         setCheckIns([]);
@@ -241,16 +248,50 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     };
 
     const addAuditEntry = (operator: string, action: string, targetId: string, reason: string) => {
-        const entry: AuditEntry = {
-            id: `ax-${Date.now().toString().slice(-4)}`,
+        const base = {
+            id: `ax-${Date.now().toString().slice(-6)}`,
             timestamp: new Date().toISOString(),
             operator,
             action,
             targetId,
             reason,
-            hash: `0x${Math.random().toString(16).slice(2, 10)}...${Math.random().toString(16).slice(2, 6)}`, previousHash: `0x000000`
         };
-        setAuditLog(prev => [entry, ...prev]);
+        // Chain inside the updater so the predecessor is always the entry that
+        // actually landed before this one, even under batched updates.
+        setAuditLog(prev => {
+            const previousHash = prev[0]?.hash ?? GENESIS;
+            const entry: AuditEntry = { ...base, previousHash, hash: hashEntry(base, previousHash) };
+            return [entry, ...prev];
+        });
+    };
+
+    /**
+     * Demo affordance: rewrite a record's reason without touching its hash,
+     * exactly as an attacker editing the database would. Verification then
+     * has to catch it. Nothing calls this in normal operation.
+     */
+    const tamperWithAuditEntry = (entryId: string) => {
+        // Record the real wording here, not inside the updater — React may run
+        // an updater more than once, and it has to stay free of side effects.
+        const target = auditLog.find(e => e.id === entryId);
+        if (target && !tamperedOriginals.current.has(entryId)) {
+            tamperedOriginals.current.set(entryId, target.reason);
+        }
+        setAuditLog(prev => prev.map(e => e.id === entryId
+            ? { ...e, reason: 'Access granted — approved by management.' }
+            : e));
+    };
+
+    /** Put the original wording back and re-sign the chain. */
+    const resealAuditLog = () => {
+        // Snapshot before scheduling: the updater runs later, so clearing the
+        // ref first would leave it empty by the time the updater reads it.
+        const originals = new Map(tamperedOriginals.current);
+        tamperedOriginals.current.clear();
+        setAuditLog(prev => rechain(prev.map(e => {
+            const original = originals.get(e.id);
+            return original ? { ...e, reason: original } : e;
+        })));
     };
 
     const approveApplication = (appId: string, operator: string, reason: string) => {
@@ -411,7 +452,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
             approveApplication, rejectApplication, waitlistApplication, requestInfoApplication,
             restrictMember, watchMember, reinstateMember, approveOpportunity, dismissOpportunity,
             dismissAnomaly, addMember, issueGuestPass, denyGuest, addAuditEntry,
-            addApplication, replyToThread, markThreadRead, resetDemoData, recordCheckIn, backend, hydrated, sponsorGuest, invoices, issueInvoice, markInvoicePaid, expenses, addExpense
+            addApplication, replyToThread, markThreadRead, tamperWithAuditEntry, resealAuditLog, resetDemoData, recordCheckIn, backend, hydrated, sponsorGuest, invoices, issueInvoice, markInvoicePaid, expenses, addExpense
         }}>
             {children}
         </DataContext.Provider>
