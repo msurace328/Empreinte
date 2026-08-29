@@ -1,7 +1,5 @@
 <meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta property="og:title" content="Empreinte for ARENA">
-<meta property="og:description" content="One operating layer for trust, access, and revenue.">
 <title>Empreinte for ARENA</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -205,6 +203,38 @@
 
   .callout { background: var(--raise); border-left: 3px solid var(--trust); padding: 24px 26px; }
 
+  /* Slim version directly under the hero, so the live link is the first
+     thing available and not only the last. */
+  .cta-top {
+    display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;
+    text-decoration: none; color: inherit;
+    border: 1px solid var(--trust); border-radius: 8px;
+    padding: 16px 20px; margin-top: 34px; background: rgba(94,230,201,.05);
+  }
+  .cta-top:hover { background: rgba(94,230,201,.1); }
+  .cta-top .go {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-weight: 700; font-size: 17px; color: var(--trust); letter-spacing: -0.01em;
+  }
+  .cta-top .say {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 11px; letter-spacing: 0.11em; text-transform: uppercase; color: var(--muted);
+  }
+
+  .cta {
+    display: block; text-decoration: none; color: inherit;
+    background: var(--raise); border: 1px solid var(--trust);
+    border-radius: 8px; padding: 34px 32px; margin-top: 30px;
+  }
+  .cta .go {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: clamp(19px, 3vw, 27px); font-weight: 700;
+    color: var(--trust); letter-spacing: -0.01em; display: block;
+    word-break: break-word;
+  }
+  .cta .say { color: var(--muted); font-size: 15.5px; margin-top: 12px; max-width: 56ch; }
+  .cta:hover { background: #18202B; }
+
   .close {
     margin-top: 96px; padding-top: 26px; border-top: 1px solid var(--rule);
     font-family: "JetBrains Mono", ui-monospace, monospace;
@@ -229,6 +259,11 @@
 </div>
 
 <div class="wrap">
+
+  <a class="cta-top" href="https://empreinte.io">
+    <span class="go">empreinte.io</span>
+    <span class="say">Running live. Open it on any device.</span>
+  </a>
 
   <section>
     <p class="kicker">The problem</p>
@@ -438,9 +473,18 @@
 </section>
 
 <div class="wrap">
+  <section>
+    <p class="kicker">See it yourself</p>
+    <h2>It is running right now.</h2>
+    <a class="cta" href="https://empreinte.io">
+      <span class="go">empreinte.io</span>
+      <p class="say">Open it on any device. You land on the cover, touch the print, and you are in the console with everything in this document live in front of you. Nothing to install and nothing to sign into.</p>
+    </a>
+  </section>
+
   <div class="close">
-    Live at <a href="https://empreinte.io">empreinte.io</a><br>
     Working prototype on production infrastructure.<br>
-    Payment flow is simulated and takes no card. Live AI analysis switches on with an API key.
+    Payment flow is simulated and takes no card. Live AI analysis switches on with an API key.<br>
+    Prepared by Melissa Surace.
   </div>
 </div>
