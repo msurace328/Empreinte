@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Volume2, VolumeX } from 'lucide-react';
+import { safeStorage } from '@/lib/safe-storage';
 
 /**
  * The cover: real footage of a swing, real ballpark sound, then the print.
@@ -44,9 +45,9 @@ export function CoverGate({ children }: { children: React.ReactNode }) {
         // ?cover forces a replay — a live demo needs a dependable way to run
         // the opening again without clearing storage or opening a new tab.
         const forced = new URLSearchParams(window.location.search).has('cover');
-        if (forced) sessionStorage.removeItem(SEEN_KEY);
+        if (forced) safeStorage.remove('session', SEEN_KEY);
         // eslint-disable-next-line react-hooks/set-state-in-effect
-        setActive(forced || !sessionStorage.getItem(SEEN_KEY));
+        setActive(forced || !safeStorage.get('session', SEEN_KEY));
     }, []);
 
     // Audio is deliberately not preloaded — see the preload="none" note below.
@@ -70,7 +71,7 @@ export function CoverGate({ children }: { children: React.ReactNode }) {
     }, []);
 
     const finish = useCallback(() => {
-        sessionStorage.setItem(SEEN_KEY, '1');
+        safeStorage.set('session', SEEN_KEY, '1');
         setPhase('granted');
         // The crowd carries the moment, so it rides at full strength through
         // "access granted" and only falls away as the cover itself leaves.
@@ -82,10 +83,18 @@ export function CoverGate({ children }: { children: React.ReactNode }) {
             setLeaving(true);
             const r = roarRef.current;
             if (r) {
-                const fade = setInterval(() => {
-                    if (r.volume > 0.05) r.volume = Math.max(0, r.volume - 0.05);
-                    else { r.pause(); clearInterval(fade); }
-                }, 55);
+                // Where volume is writable, ride it down. Where it is not
+                // (iOS), stop once the cover has visually gone instead of
+                // spinning a fade that cannot take effect.
+                r.volume = 0.99;
+                const canFade = r.volume < 1;
+                r.volume = 1;
+                if (canFade) {
+                    const fade = setInterval(() => {
+                        if (r.volume > 0.05) r.volume = Math.max(0, r.volume - 0.05);
+                        else { r.pause(); clearInterval(fade); }
+                    }, 55);
+                }
             }
         }, 1500));
         timers.current.push(setTimeout(() => { stopAll(); setActive(false); }, 2700));
@@ -108,16 +117,19 @@ export function CoverGate({ children }: { children: React.ReactNode }) {
         // This gesture is what unlocks audio — start the bed under the swing.
         if (!muted) {
             const amb = ambienceRef.current;
-            if (amb) { amb.volume = 0.3; amb.currentTime = 0; void amb.play().catch(() => {}); }
+            // Levels are baked into the files rather than set here: iOS treats
+            // HTMLMediaElement.volume as read-only, so any mix applied in code
+            // is silently ignored on iPhone and iPad.
+            if (amb) { amb.currentTime = 0; void amb.play().catch(() => {}); }
         }
 
         // Crack lands where the bat meets the ball; the crowd comes up under it.
         timers.current.push(setTimeout(() => {
             if (muted) return;
             const c = crackRef.current;
-            if (c) { c.currentTime = 0; c.volume = 1; void c.play().catch(() => {}); }
+            if (c) { c.currentTime = 0; void c.play().catch(() => {}); }
             const r = roarRef.current;
-            if (r) { r.currentTime = 0; r.volume = 0.85; void r.play().catch(() => {}); }
+            if (r) { r.currentTime = 0; void r.play().catch(() => {}); }
         }, LEAD_IN * 1000));
 
         timers.current.push(setTimeout(() => { setHolding(false); finish(); }, HOLD_MS));
@@ -143,7 +155,7 @@ export function CoverGate({ children }: { children: React.ReactNode }) {
         return () => window.removeEventListener('keydown', onKey);
     }, [active, phase, beginHold]);
 
-    const skip = () => { stopAll(); sessionStorage.setItem(SEEN_KEY, '1'); setActive(false); };
+    const skip = () => { stopAll(); safeStorage.set('session', SEEN_KEY, '1'); setActive(false); };
 
     if (active === null) return <>{children}</>;
 

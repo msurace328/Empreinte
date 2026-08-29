@@ -55,7 +55,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <GuidedTour />
             <CommandPalette />
             <AlertCenter />
-            <main className="flex-1 lg:pl-64 pt-14 lg:pt-0">
+            {/* min-w-0: a flex item defaults to min-width:auto and will not shrink
+                below its content, so a wide table pushed the whole page sideways. */}
+            <main className="flex-1 min-w-0 lg:pl-64 pt-14 lg:pt-0">
                 <div className="max-w-[1600px] mx-auto p-4 sm:p-6 lg:p-8">
                     {children}
                 </div>

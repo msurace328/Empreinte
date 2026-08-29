@@ -236,8 +236,8 @@ export function Sidebar() {
                 </button>
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <button aria-label="Account" className="rounded-full">
-                            <Avatar className="size-7 border border-border-muted">
+                        <button aria-label="Account" className="rounded-full p-1.5 -m-1.5 flex items-center justify-center">
+                            <Avatar className="size-8 border border-border-muted">
                                 <AvatarImage src={user.role === 'Admin' ? 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100' : ''} />
                                 <AvatarFallback className="bg-canvas-card text-[10px]">{user.name.charAt(0)}</AvatarFallback>
                             </Avatar>

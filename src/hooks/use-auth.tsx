@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { safeStorage } from '@/lib/safe-storage';
 
 export type UserRole = 'Admin' | 'MembershipDirector' | 'FrontDesk' | 'Auditor' | 'Member';
 
@@ -34,14 +35,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     useEffect(() => {
         // Default to Admin for demo
-        const savedRole = (localStorage.getItem('empreinte_role') as UserRole) || 'Admin';
+        const savedRole = (safeStorage.get('local', 'empreinte_role') as UserRole) || 'Admin';
         setUser(USERS_BY_ROLE[savedRole]);
         setIsLoading(false);
     }, []);
 
     const setRole = (role: UserRole) => {
         setUser(USERS_BY_ROLE[role]);
-        localStorage.setItem('empreinte_role', role);
+        safeStorage.set('local', 'empreinte_role', role);
     };
 
     return (

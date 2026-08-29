@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useAuth, UserRole } from '@/hooks/use-auth';
 import { ArrowLeft, ArrowRight, Compass, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { safeStorage } from '@/lib/safe-storage';
 
 interface TourStep {
     anchor: string;          // data-tour-id of the element to spotlight
@@ -94,7 +95,7 @@ export function GuidedTour() {
     useEffect(() => {
         if (!user || user.role === 'Member') return;
         if (pathname !== '/admin' && pathname !== '/admin/door') return;
-        if (localStorage.getItem(SEEN_KEY)) return;
+        if (safeStorage.get('local', SEEN_KEY)) return;
         const t = setTimeout(() => setOpen(true), 1200);
         return () => clearTimeout(t);
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -110,7 +111,7 @@ export function GuidedTour() {
     }, [start]);
     const close = useCallback(() => {
         setOpen(false);
-        localStorage.setItem(SEEN_KEY, '1');
+        safeStorage.set('local', SEEN_KEY, '1');
     }, []);
 
     const go = useCallback((next: number) => {

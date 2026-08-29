@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Member, Application, RiskSignal, AccessAnomaly, RevenueOpportunity, AuditEntry, Booking, Guest, MessageThread, CheckInEvent, CheckInResult, Invoice, Expense } from '@/lib/types';
 import { hashEntry, rechain, GENESIS } from '@/lib/hash-chain';
+import { safeStorage } from '@/lib/safe-storage';
 import { initialMembers, initialApplications, initialOpportunities, initialAnomalies, initialAuditLog, initialBookings, initialSuites, initialGuests, initialThreads, initialExpenses } from '@/lib/services/seed-data';
 
 interface DataContextType {
@@ -130,7 +131,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
             if (!restored) {
                 try {
-                    const raw = localStorage.getItem(STORE_KEY);
+                    const raw = safeStorage.get('local', STORE_KEY);
                     if (raw) apply(JSON.parse(raw));
                 } catch {
                     // Corrupt or unavailable storage just falls back to seed data.
@@ -146,7 +147,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         if (!hydrated) return;
         const snapshot = { version: SESSION_VERSION, members, applications, opportunities, anomalies, auditLog, guests, threads, checkIns, invoices, expenses };
         try {
-            localStorage.setItem(STORE_KEY, JSON.stringify(snapshot));
+            safeStorage.set('local', STORE_KEY, JSON.stringify(snapshot));
         } catch {
             // Quota or private-mode failures are non-fatal; the session just stops persisting.
         }
@@ -162,7 +163,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     }, [hydrated, members, applications, opportunities, anomalies, auditLog, guests, threads, checkIns, invoices, expenses]);
 
     const resetDemoData = () => {
-        try { localStorage.removeItem(STORE_KEY); } catch {}
+        safeStorage.remove('local', STORE_KEY);
         fetch('/api/state', { method: 'DELETE' }).catch(() => {});
         setMembers(initialMembers);
         setApplications(initialApplications);
