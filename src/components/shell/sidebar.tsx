@@ -29,6 +29,7 @@ import {
 import { cn } from '@/lib/utils';
 import { useAuth, UserRole } from '@/hooks/use-auth';
 import { useData } from '@/lib/providers/data-provider';
+import { NAV_ITEMS } from '@/lib/nav';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
     DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
@@ -36,27 +37,20 @@ import {
     DropdownMenuSubContent, DropdownMenuSubTrigger,
 } from '@/components/ui/dropdown-menu';
 
-interface NavItem {
-    title: string;
-    href: string;
-    icon: React.ElementType;
-    roles: UserRole[];
-}
-
-const navItems: NavItem[] = [
-    { title: 'Command Center', href: '/admin', icon: LayoutDashboard, roles: ['Admin', 'MembershipDirector', 'FrontDesk', 'Auditor'] },
-    { title: 'Door Console', href: '/admin/door', icon: DoorOpen, roles: ['Admin', 'MembershipDirector', 'FrontDesk'] },
-    { title: 'Review Queue', href: '/admin/applications', icon: UserPlus, roles: ['Admin', 'MembershipDirector'] },
-    { title: 'Members', href: '/admin/members', icon: Users, roles: ['Admin', 'MembershipDirector', 'FrontDesk', 'Auditor'] },
-    { title: 'Inbox', href: '/admin/inbox', icon: Inbox, roles: ['Admin', 'MembershipDirector', 'FrontDesk'] },
-    { title: 'Access & Guests', href: '/admin/access', icon: Lock, roles: ['Admin', 'MembershipDirector', 'FrontDesk', 'Auditor'] },
-    { title: 'Suites & Game-Day', href: '/admin/suites', icon: Ticket, roles: ['Admin', 'MembershipDirector', 'FrontDesk', 'Auditor'] },
-    { title: 'Member Graph', href: '/admin/graph', icon: Network, roles: ['Admin', 'MembershipDirector', 'Auditor'] },
-    { title: 'Revenue Intel', href: '/admin/revenue', icon: DollarSign, roles: ['Admin', 'MembershipDirector'] },
-    { title: 'Books & Tax', href: '/admin/books', icon: Calculator, roles: ['Admin'] },
-    { title: 'Audit Log', href: '/admin/audit', icon: History, roles: ['Admin', 'Auditor'] },
-    { title: 'Security', href: '/admin/settings', icon: ShieldAlert, roles: ['Admin'] },
-];
+const ICONS: Record<string, React.ElementType> = {
+    '/admin': LayoutDashboard,
+    '/admin/door': DoorOpen,
+    '/admin/applications': UserPlus,
+    '/admin/members': Users,
+    '/admin/inbox': Inbox,
+    '/admin/access': Lock,
+    '/admin/suites': Ticket,
+    '/admin/graph': Network,
+    '/admin/revenue': DollarSign,
+    '/admin/books': Calculator,
+    '/admin/audit': History,
+    '/admin/settings': ShieldAlert,
+};
 
 const ROLE_LABEL: Record<UserRole, string> = {
     Admin: 'Admin · CEO',
@@ -84,7 +78,7 @@ export function Sidebar() {
 
     if (!user || user.role === 'Member') return null;
 
-    const filteredNavItems = navItems.filter(item => item.roles.includes(user.role));
+    const filteredNavItems = NAV_ITEMS.filter(item => item.roles.includes(user.role));
 
     const openTour = () => {
         setMobileOpen(false);
@@ -186,7 +180,9 @@ export function Sidebar() {
                                 : 'text-muted-foreground hover:bg-canvas-card hover:text-foreground'
                         )}
                     >
-                        <item.icon className={cn('size-4 transition-colors', isActive ? 'text-signal-cyan' : 'group-hover:text-foreground')} />
+                        {React.createElement(ICONS[item.href] ?? LayoutDashboard, {
+                            className: cn('size-4 transition-colors', isActive ? 'text-signal-cyan' : 'group-hover:text-foreground'),
+                        })}
                         <span className="font-medium">{item.title}</span>
                         {isActive && <div className="ml-auto w-1 h-3 bg-signal-cyan rounded-full" />}
                     </Link>

@@ -1,13 +1,29 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ShieldCheck, Lock, UserRoundSearch, Key, Database, Globe, Zap, Bell } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { UserRole } from '@/hooks/use-auth';
+import { NAV_ITEMS, ROLE_LABELS, ROLE_CAPABILITIES, permissionsFor } from '@/lib/nav';
+import { useData } from '@/lib/providers/data-provider';
+import { Check, X } from 'lucide-react';
 
 export default function SettingsPage() {
+    const { members, applications, guests } = useData();
+    const [inspecting, setInspecting] = useState<UserRole | null>(null);
+    const [privacyOpen, setPrivacyOpen] = useState(false);
+
+    // Counted from what is actually held, not asserted.
+    const inventory = [
+        { record: 'Members', count: members.length, fields: 'Name, email, photo, tier, access history', retention: 'For the life of the membership' },
+        { record: 'Applications', count: applications.length, fields: 'Name, email, photo, submitted documents', retention: 'Documents purged 30 days after a decision' },
+        { record: 'Guests', count: guests.length, fields: 'Name, sponsor, vetting outcomes', retention: 'Purged 90 days after the fixture' },
+    ];
+
     return (
         <div className="space-y-8 animate-in fade-in duration-700">
             <div>
@@ -25,30 +41,31 @@ export default function SettingsPage() {
                             <CardDescription>Configure least-privilege roles for ARENA staff.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-6">
-                            {[
-                                { role: 'Admin', desc: 'Full system access, settings, and financial data.', active: 1 },
-                                { role: 'Membership Director', desc: 'Vetting, member management, and audit log read.', active: 2 },
-                                { role: 'Front-desk Operator', desc: 'Check-ins, guest management, and basic member profiles.', active: 4 },
-                                { role: 'Auditor', desc: 'Global read-only access to records and immutable audit log.', active: 1 },
-                            ].map((item, i) => (
-                                <div key={i} className="flex items-center justify-between p-4 rounded-lg bg-canvas-muted/30 border border-border-muted">
-                                    <div>
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-sm font-bold">{item.role}</span>
-                                            <Badge variant="outline" className="text-[10px] font-mono text-signal-cyan">{item.active} ACCOUNTS</Badge>
+                            {(['Admin', 'MembershipDirector', 'FrontDesk', 'Auditor'] as UserRole[]).map((role) => {
+                                const { allowed } = permissionsFor(role);
+                                return (
+                                    <div key={role} className="flex items-center justify-between gap-4 p-4 rounded-lg bg-canvas-muted/30 border border-border-muted">
+                                        <div className="min-w-0">
+                                            <div className="flex items-center gap-2 flex-wrap">
+                                                <span className="text-sm font-bold">{ROLE_LABELS[role]}</span>
+                                                <Badge variant="outline" className="text-[10px] font-mono text-signal-cyan">
+                                                    {allowed.length} OF {NAV_ITEMS.length} AREAS
+                                                </Badge>
+                                            </div>
+                                            <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
+                                                {allowed.map(a => a.title).join(' · ')}
+                                            </p>
                                         </div>
-                                        <p className="text-xs text-muted-foreground mt-1">{item.desc}</p>
+                                        <Button variant="ghost" size="sm" onClick={() => setInspecting(role)}
+                                            className="text-muted-foreground hover:text-foreground shrink-0">
+                                            Inspect
+                                        </Button>
                                     </div>
-                                    <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground" onClick={() => alert('Role configuration locked for demographic demo.')}>Edit</Button>
-                                </div>
-                            ))}
-                            <Button
-                                variant="outline"
-                                className="w-full glass border-dashed border-border-muted text-xs font-mono uppercase tracking-widest text-muted-foreground"
-                                onClick={() => alert('Custom role definition requires Architect-level permissions.')}
-                            >
-                                + Define New Custom Role
-                            </Button>
+                                );
+                            })}
+                            <p className="text-[10px] font-mono text-muted-foreground/70 pt-1">
+                                Roles are enforced from a single config; this page reads the same source the app does.
+                            </p>
                         </CardContent>
                     </Card>
 
@@ -120,15 +137,87 @@ export default function SettingsPage() {
                     <Card className="glass border-border-muted p-6">
                         <h3 className="text-sm font-bold mb-4">Data Minimization</h3>
                         <p className="text-xs text-muted-foreground leading-relaxed mb-6">
-                            Empreinte automatically redacts PII for users below the "Director" role level.
+                            Empreinte automatically redacts PII for users below the &ldquo;Director&rdquo; role level.
                             Document images are purged 30 days after verification by default.
                         </p>
-                        <Button variant="outline" className="w-full glass border-border-muted text-[10px] font-mono uppercase tracking-widest">
+                        <Button variant="outline" onClick={() => setPrivacyOpen(true)}
+                            className="w-full glass border-border-muted text-[10px] font-mono uppercase tracking-widest">
                             Privacy Audit
                         </Button>
                     </Card>
                 </div>
             </div>
+            {/* What a role can actually reach */}
+            <Dialog open={!!inspecting} onOpenChange={(o) => !o && setInspecting(null)}>
+                <DialogContent className="glass border-border-muted bg-canvas-card max-w-lg">
+                    <DialogHeader>
+                        <DialogTitle>{inspecting && ROLE_LABELS[inspecting]}</DialogTitle>
+                        <DialogDescription className="text-xs">
+                            Read from the same configuration the app enforces, so this cannot drift from reality.
+                        </DialogDescription>
+                    </DialogHeader>
+                    {inspecting && (
+                        <div className="space-y-4 max-h-[55vh] overflow-y-auto pr-1">
+                            <div>
+                                <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-2">Can do</p>
+                                <div className="space-y-1.5">
+                                    {ROLE_CAPABILITIES[inspecting].map(c => (
+                                        <div key={c} className="flex items-start gap-2 text-xs">
+                                            <Check className="size-3.5 text-emerald-500 mt-0.5 shrink-0" />
+                                            <span className="text-muted-foreground">{c}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                            <Separator className="bg-border-muted" />
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <p className="text-[10px] font-mono uppercase tracking-widest text-emerald-500 mb-2">Can open</p>
+                                    {permissionsFor(inspecting).allowed.map(i => (
+                                        <p key={i.href} className="text-xs text-muted-foreground py-0.5">{i.title}</p>
+                                    ))}
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-mono uppercase tracking-widest text-signal-red mb-2">Blocked</p>
+                                    {permissionsFor(inspecting).denied.length === 0
+                                        ? <p className="text-xs text-muted-foreground py-0.5">Nothing — full access</p>
+                                        : permissionsFor(inspecting).denied.map(i => (
+                                            <p key={i.href} className="text-xs text-muted-foreground/60 py-0.5 line-through">{i.title}</p>
+                                        ))}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </DialogContent>
+            </Dialog>
+
+            {/* Data inventory */}
+            <Dialog open={privacyOpen} onOpenChange={setPrivacyOpen}>
+                <DialogContent className="glass border-border-muted bg-canvas-card max-w-xl">
+                    <DialogHeader>
+                        <DialogTitle>Privacy audit</DialogTitle>
+                        <DialogDescription className="text-xs">
+                            Personal data currently held, counted live from the record store.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-3">
+                        {inventory.map(r => (
+                            <div key={r.record} className="rounded-lg border border-border-muted bg-canvas-muted/30 p-3">
+                                <div className="flex items-center justify-between">
+                                    <p className="text-sm font-medium">{r.record}</p>
+                                    <Badge variant="outline" className="font-mono text-[10px]">{r.count} records</Badge>
+                                </div>
+                                <p className="text-[11px] text-muted-foreground mt-1.5">{r.fields}</p>
+                                <p className="text-[10px] font-mono text-muted-foreground/70 mt-1">Retention: {r.retention}</p>
+                            </div>
+                        ))}
+                        <p className="text-[10px] text-muted-foreground/70 leading-relaxed pt-1">
+                            Prototype note: this reports what the demo holds. A production deployment would also cover
+                            payment records, document images, and any data held by the vendors listed under Integration Seams.
+                        </p>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }
