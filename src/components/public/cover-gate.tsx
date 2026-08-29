@@ -41,8 +41,12 @@ export function CoverGate({ children }: { children: React.ReactNode }) {
     // sessionStorage is client-only, so this has to happen after mount —
     // reading it during render would break hydration.
     useEffect(() => {
+        // ?cover forces a replay — a live demo needs a dependable way to run
+        // the opening again without clearing storage or opening a new tab.
+        const forced = new URLSearchParams(window.location.search).has('cover');
+        if (forced) sessionStorage.removeItem(SEEN_KEY);
         // eslint-disable-next-line react-hooks/set-state-in-effect
-        setActive(!sessionStorage.getItem(SEEN_KEY));
+        setActive(forced || !sessionStorage.getItem(SEEN_KEY));
     }, []);
 
     // Audio is deliberately not preloaded — see the preload="none" note below.
