@@ -45,3 +45,6 @@ next-env.d.ts
 
 # Upstash/Vercel KV credentials pulled by `vercel integration add`
 .env.local
+
+# FUSE mount artifacts
+.fuse_hidden*

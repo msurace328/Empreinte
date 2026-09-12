@@ -27,9 +27,13 @@ test('quarterOf maps every month to the right quarter', () => {
     });
 });
 
-test('quarterOf holds at the year boundaries', () => {
+test('quarterOf holds at the year boundaries regardless of the viewer timezone', () => {
+    // Regression: these dates parse as UTC midnight, so reading the month in
+    // local time put Jan 1 in Q4 for anyone west of UTC.
     assert.equal(quarterOf('2026-01-01'), 'Q1');
     assert.equal(quarterOf('2026-12-31'), 'Q4');
+    assert.equal(quarterOf('2026-04-01'), 'Q2');
+    assert.equal(quarterOf('2026-06-30'), 'Q2');
 });
 
 test('buildPnl separates what the books say from what the return starts at', () => {

@@ -17,8 +17,15 @@ export const QUARTERS = [
     { key: 'Q4', label: 'Q4', months: [9, 10, 11], estDue: 'Jan 15' },
 ] as const;
 
+/**
+ * Expense dates are calendar dates ('2026-01-01'), not instants. `new Date()`
+ * parses those as UTC midnight, so reading the month back with getMonth() shifts
+ * the date into the viewer's timezone: January 1 lands in Q4 for anyone west of
+ * UTC. A quarter is a property of the date on the receipt, not of who is looking
+ * at it, so read it in UTC.
+ */
 export function quarterOf(iso: string): string {
-    const m = new Date(iso).getMonth();
+    const m = new Date(iso).getUTCMonth();
     return QUARTERS.find(q => (q.months as readonly number[]).includes(m))!.key;
 }
 
