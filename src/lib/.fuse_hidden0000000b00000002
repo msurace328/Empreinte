@@ -1,4 +1,4 @@
-import type { Expense, ExpenseCategory, Booking, Member, MembershipTier, Guest } from '@/lib/types';
+import { Expense, ExpenseCategory, Booking, Member, MembershipTier, Guest } from '@/lib/types';
 
 /** Season dues by tier — the same numbers the public pricing page shows. */
 export const TIER_PRICE: Record<MembershipTier, number> = {

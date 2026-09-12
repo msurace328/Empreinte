@@ -93,6 +93,19 @@ cp .env.example .env.local
 
 Without the key everything else works; the button surfaces a clear error instead.
 
+## Tests
+
+```bash
+npm test
+```
+
+26 tests, no test framework and no dev dependencies: Node's built-in runner with native TypeScript stripping.
+
+Coverage is deliberately narrow and aimed at the code where being wrong is silent:
+
+- **`src/lib/hash-chain.ts`** — the SHA-256 implementation is checked against the published NIST vectors and across the 55/56/64-byte padding boundary where naive implementations break. The chain tests prove the properties the audit log actually claims: that every signed field is covered, that the oldest entry anchors at genesis, and that `verifyChain` catches a field edited after the fact, a deleted entry, a reordering, and a forged entry spliced onto a real chain. One test pins the fact that re-signing a tampered chain makes it verify cleanly, which is why the *stored* hash is the evidence and recomputation is not.
+- **`src/lib/finance.ts`** — quarter boundaries, the split between book net and taxable net, category grouping that applies each line's deductible rate rather than one rate to the total, the guarantee that a loss never produces a set-aside, and CSV quoting so a field cannot break out of its column.
+
 ## Guided tour
 
 Every admin page carries a **Tour** button (bottom-right). It spotlights each sidebar tab in turn with a written explanation of what it does, navigating the page as it goes. Arrow keys or the on-screen arrows step through it; steps are filtered to the signed-in role. It opens itself once on a first visit.
