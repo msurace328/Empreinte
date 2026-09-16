@@ -1,4 +1,4 @@
-import { Member, Application, AccessAnomaly, RevenueOpportunity, AuditEntry, Suite, Booking, Guest, MessageThread, Expense } from '../types';
+import type { Member, Application, AccessAnomaly, RevenueOpportunity, AuditEntry, Suite, Booking, Guest, MessageThread, Expense } from '../types.ts';
 
 
 const baseMembers: Member[] = [
@@ -31,7 +31,7 @@ const baseMembers: Member[] = [
         email: 'j.thorne@apex.com',
         avatarUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=200',
         tier: 'Associate',
-        status: 'Watch',
+        status: 'Restricted',
         joinDate: '2025-11-20T14:00:00Z',
         lastAccess: '2026-05-25T03:45:00Z',
         trustScore: 64,
@@ -188,7 +188,7 @@ export const initialBookings: Booking[] = [
         id: `b-${i}`,
         memberId: i % 3 === 0 ? 'm-001' : (i % 3 === 1 ? 'm-002' : 'm-003'),
         suiteId: `s-00${(i % 3) + 1}`,
-        date: `2026-05-${Math.max(1, 25 - Math.floor(i / 2))}`.padStart(10, '0'),
+        date: `2026-05-${String(Math.max(1, 25 - Math.floor(i / 2))).padStart(2, '0')}`,
         startTime: '19:00',
         duration: 4,
         partySize: 4 + (i % 5),
@@ -303,3 +303,90 @@ export const initialExpenses: Expense[] = [
     { id: 'ex-017', date: '2026-05-19T00:00:00Z', vendor: 'Delta / lodging', description: 'League ops conference — 2 staff', amount: 8900, category: 'Travel', deductibleRate: 1, receipt: true, method: 'Card' },
     { id: 'ex-018', date: '2026-05-24T00:00:00Z', vendor: 'Rivera Bookkeeping', description: 'Monthly close & reconciliation', amount: 9600, category: 'Professional Services', deductibleRate: 1, receipt: true, method: 'ACH' },
 ];
+
+// --- Lifecycle completeness -------------------------------------------------
+// The platform's story includes negative outcomes: a removed member, a
+// rejected synthetic identity (referenced by log-002), the credential-sharing
+// anomaly behind log-001, off-hours access, failed bookings, and a denied
+// guest. Without them the member table shows a club where nothing ever goes
+// wrong, which is not the product's point.
+
+initialMembers.push({
+    id: 'm-004',
+    name: 'Victor Hale',
+    email: 'v.hale@halecapital.net',
+    avatarUrl: '',
+    tier: 'Suite',
+    status: 'Removed',
+    joinDate: '2025-06-02T09:00:00Z',
+    lastAccess: '2026-03-14T23:55:00Z',
+    trustScore: 9,
+});
+
+initialApplications.push({
+    id: 'app-fraud-x',
+    name: 'Adrian Cole',
+    email: 'a.cole.7781@quickinbox.top',
+    avatarUrl: '',
+    tier: 'Founder',
+    appliedDate: '2026-05-23T22:40:00Z',
+    status: 'Rejected',
+    riskScore: 97,
+});
+
+initialAnomalies.push(
+    {
+        id: 'an-003',
+        memberId: 'm-003',
+        type: 'CredentialSharing',
+        timestamp: '2026-05-23T21:10:00Z',
+        severity: 'High',
+        description: 'Access credential shared with a non-member; two distinct device fingerprints on one badge.',
+        isResolved: false,
+    },
+    {
+        id: 'an-004',
+        memberId: 'm-101',
+        type: 'OffHours',
+        timestamp: '2026-05-22T03:20:00Z',
+        severity: 'Medium',
+        description: 'Facility entry at 3:20 AM, outside member access hours for Associate tier.',
+        isResolved: true,
+    },
+);
+
+initialBookings.push(
+    {
+        id: 'b-noshow-1',
+        memberId: 'm-101',
+        suiteId: 's-002',
+        date: '2026-05-20',
+        startTime: '19:00',
+        duration: 3,
+        partySize: 6,
+        amount: 1200,
+        status: 'NoShow',
+    },
+    {
+        id: 'b-refund-1',
+        memberId: 'm-002',
+        suiteId: 's-003',
+        date: '2026-05-16',
+        startTime: '20:00',
+        duration: 4,
+        partySize: 18,
+        amount: 5000,
+        status: 'Refunded',
+    },
+);
+
+initialGuests.push({
+    id: 'gp-3311',
+    name: 'Ray Mercer',
+    sponsorId: 'm-003',
+    sponsorName: 'Julian Thorne',
+    requestedAt: '2026-05-24T16:22:00Z',
+    status: 'Denied',
+    trustScore: 22,
+    checks: { idVerified: false, billingCurrent: false, backgroundClear: false },
+});
