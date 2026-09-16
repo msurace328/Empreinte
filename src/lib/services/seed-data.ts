@@ -390,3 +390,80 @@ initialGuests.push({
     trustScore: 22,
     checks: { idVerified: false, billingCurrent: false, backgroundClear: false },
 });
+
+// --- Eval distractors that are also realistic operations noise --------------
+// Entries that share vocabulary with common operator queries without being
+// the right answer: a lost-badge thread (not credential sharing), a resolved
+// low-severity concurrent-use (not an open incident), a waitlisted applicant
+// (neither pending-review nor rejected), an upcoming booking (not a failed
+// one), and an unremarkable mid-trust member.
+
+initialMembers.push({
+    id: 'm-005',
+    name: 'Owen Pierce',
+    email: 'owen.pierce@pierceandco.com',
+    avatarUrl: '',
+    tier: 'Associate',
+    status: 'Active',
+    joinDate: '2025-09-12T09:00:00Z',
+    lastAccess: '2026-05-23T20:10:00Z',
+    trustScore: 55,
+});
+
+initialApplications.push({
+    id: 'app-004',
+    name: 'Lena Whitfield',
+    email: 'l.whitfield@whitfieldlaw.com',
+    avatarUrl: '',
+    tier: 'Associate',
+    appliedDate: '2026-05-22T15:30:00Z',
+    status: 'Waitlisted',
+    riskScore: 34,
+});
+
+initialAnomalies.push({
+    id: 'an-005',
+    memberId: 'm-002',
+    type: 'ConcurrentUse',
+    timestamp: '2026-04-30T18:05:00Z',
+    severity: 'Low',
+    description: 'Badge scanned at two gates within four minutes; resolved as a lobby re-entry, not simultaneous use.',
+    isResolved: true,
+});
+
+initialBookings.push({
+    id: 'b-upcoming-1',
+    memberId: 'm-001',
+    suiteId: 's-001',
+    date: '2026-06-03',
+    startTime: '18:00',
+    duration: 5,
+    partySize: 10,
+    amount: 2500,
+    status: 'Upcoming',
+});
+
+initialThreads.push(
+    {
+        id: 'th-005',
+        subject: 'Replacement badge request',
+        kind: 'Member',
+        participantId: 'm-005',
+        participantName: 'Owen Pierce',
+        unread: false,
+        messages: [
+            { id: 'th-005-m1', from: 'member', authorName: 'Owen Pierce', body: 'I lost my access badge over the weekend, can I get a replacement credential issued? Happy to verify my identity at the front desk.', at: '2026-05-23T14:02:00Z' },
+            { id: 'th-005-m2', from: 'ops', authorName: 'Admin.Sterling', body: 'Old badge deactivated, replacement ready at reception with ID.', at: '2026-05-23T14:40:00Z' },
+        ],
+    },
+    {
+        id: 'th-006',
+        subject: 'Hours question',
+        kind: 'Guest',
+        participantName: 'Priya Anand',
+        unread: false,
+        messages: [
+            { id: 'th-006-m1', from: 'member', authorName: 'Priya Anand', body: 'What are the facility access hours on weekends? Planning an early morning visit.', at: '2026-05-24T09:15:00Z' },
+        ],
+    },
+);

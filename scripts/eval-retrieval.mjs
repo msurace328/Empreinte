@@ -47,7 +47,7 @@ console.log('queries with more than k relevant chunks cap below 1.0 by design.')
 // CI gate: --assert fails the process below these floors, so corpus or
 // search changes that degrade retrieval break the build.
 if (process.argv.includes('--assert')) {
-    const FLOOR_R10 = 0.9, FLOOR_MRR = 0.85;
+    const FLOOR_R10 = 0.93, FLOOR_MRR = 0.85; // measured 0.967 / 0.884 on the 30-query hardened set; q28 is a known embedding-limit miss, kept failing on purpose
     if (R10 < FLOOR_R10 || MRR < FLOOR_MRR) {
         console.error(`\nFAIL: Recall@10 ${R10.toFixed(3)} (floor ${FLOOR_R10}) / MRR ${MRR.toFixed(3)} (floor ${FLOOR_MRR})`);
         process.exit(1);
