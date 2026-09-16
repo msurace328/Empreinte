@@ -48,3 +48,4 @@ next-env.d.ts
 
 # FUSE mount artifacts
 .fuse_hidden*
+.hf-cache/

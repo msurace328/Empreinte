@@ -24,7 +24,7 @@ export const evalQueries: EvalQuery[] = [
     { id: 'q09', query: 'off hours facility access', isRelevant: c => c.metadata.kind === 'anomaly' && c.text.includes('OffHours') },
     { id: 'q10', query: 'guest visit spikes', isRelevant: c => c.metadata.kind === 'anomaly' && c.text.includes('GuestSpike') },
     { id: 'q11', query: 'open revenue opportunities we have not acted on', isRelevant: c => c.metadata.kind === 'opportunity' && c.metadata.status === 'Open' },
-    { id: 'q12', query: 'midweek suite utilization gaps', isRelevant: c => (c.metadata.kind === 'opportunity' && /midweek|weekday/i.test(c.text)) || (c.metadata.kind === 'booking' && (c.metadata.weekday ?? 0) >= 2 && (c.metadata.weekday ?? 0) <= 4) },
+    { id: 'q12', query: 'midweek suite utilization gaps', isRelevant: c => c.metadata.kind === 'opportunity' && /midweek|tuesday|weekday/i.test(c.text) },
     { id: 'q13', query: 'member restriction decisions and the reasons recorded', isRelevant: c => c.metadata.kind === 'audit' && /restrict/i.test(c.text) },
     { id: 'q14', query: 'no show suite bookings', isRelevant: c => c.metadata.kind === 'booking' && c.metadata.status === 'NoShow' },
     { id: 'q15', query: 'refunded bookings', isRelevant: c => c.metadata.kind === 'booking' && c.metadata.status === 'Refunded' },

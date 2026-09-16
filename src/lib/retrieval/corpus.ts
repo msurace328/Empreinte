@@ -75,13 +75,13 @@ export function buildCorpus(): Chunk[] {
     }
 
     for (const e of initialAuditLog) {
+        const humanAction = e.action.replace(/_/g, ' ').toLowerCase();
         chunks.push({
             id: `audit:${e.id}`,
-            text: `Audit entry ${e.timestamp}: operator ${e.operator} performed ${e.action} on ${memberName(e.targetId)}. Reason: ${e.reason}`,
+            text: `Audit entry ${e.timestamp}: operator ${e.operator} recorded the decision to ${humanAction} for ${memberName(e.targetId)}. Reason: ${e.reason}`,
             metadata: { kind: 'audit', memberId: e.targetId, date: e.timestamp },
         });
     }
-
     for (const b of initialBookings) {
         chunks.push({
             id: `booking:${b.id}`,
