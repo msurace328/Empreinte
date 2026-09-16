@@ -104,3 +104,19 @@ export default function DemoGuide() {
                     >
                       Take me there →
                     </Link>
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </div>
+      )}
+      <button
+        onClick={() => setOpen(!open)}
+        className={`rounded-full px-4 py-2.5 text-sm font-semibold shadow-lg ${ACCENT_BTN}`}
+      >
+        {open ? 'Close' : 'Guided Tour'}
+      </button>
+    </div>
+  );
+}
