@@ -62,7 +62,7 @@ export default function DemoGuide() {
   };
 
   return (
-    <div className="fixed bottom-5 right-5 z-50 font-sans">
+    <div className="fixed bottom-5 left-5 z-50 font-sans">
       {open && (
         <div className="mb-3 max-h-[70vh] w-80 overflow-y-auto rounded-2xl border border-white/10 bg-zinc-950/95 p-4 shadow-2xl backdrop-blur">
           <div className="mb-1 flex items-center justify-between">
