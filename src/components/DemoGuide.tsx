@@ -15,8 +15,8 @@ const STEPS = [
   },
   {
     href: '/admin/applications',
-    title: 'Catch a Fake Applicant',
-    look: 'Open the flagged application. Empreinte caught an AI-generated photo and a disposable email before admission.',
+    title: 'Run the Application Copilot',
+    look: 'Click the Copilot button on a pending application. The agent investigates the records live (identity reuse, referral proximity, domain intelligence), recommends a disposition with cited evidence, and drafts the response. You decide; your decision is written to the audit chain.',
   },
   {
     href: '/admin/graph',
